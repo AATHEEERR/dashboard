@@ -1,50 +1,103 @@
+
+
 import streamlit as st
-import numpy as np
 import pandas as pd
-import altair as alt
+import plost
 
-# Page title
-st.set_page_config(page_title='Interactive Data Explorer', page_icon='📊')
-st.title('📊 Interactive Data Explorer')
+st.set_page_config(layout='wide', initial_sidebar_state='expanded')
 
-with st.expander('About this app'):
-  st.markdown('**What can this app do?**')
-  st.info('This app shows the use of Pandas for data wrangling, Altair for chart creation and editable dataframe for data interaction.')
-  st.markdown('**How to use the app?**')
-  st.warning('To engage with the app, 1. Select genres of your interest in the drop-down selection box and then 2. Select the year duration from the slider widget. As a result, this should generate an updated editable DataFrame and line plot.')
-  
-st.subheader('Which Movie Genre performs ($) best at the box office?')
+# with open('C:/Users/96650/Downloads/style.css') as f:
+#     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# Load data
-df = pd.read_csv('data/movies_genres_summary.csv')
-df.year = df.year.astype('int')
+st.write( """
+<style>
+/* Logo */
+[data-testid="stSidebar"] {
+    background-image: url(https://streamlit.io/images/brand/streamlit-logo-secondary-colormark-darktext.png);
+    background-size: 200px;
+    background-repeat: no-repeat;
+    background-position: 4px 20px;
+}
 
-# Input widgets
-## Genres selection
-genres_list = df.genre.unique()
-genres_selection = st.multiselect('Select genres', genres_list, ['Action', 'Adventure', 'Biography', 'Comedy', 'Drama', 'Horror'])
+/* Card */
+div.css-1r6slb0.e1tzin5v2 {
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    padding: 5% 5% 5% 10%;
+    border-radius: 5px;
+    border-left: 0.5rem solid #9AD8E1 !important;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
 
-## Year selection
-year_list = df.year.unique()
-year_selection = st.slider('Select year duration', 1986, 2006, (2000, 2016))
-year_selection_list = list(np.arange(year_selection[0], year_selection[1]+1))
+label.css-mkogse.e16fv1kl2 {
+    color: #36b9cc !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+}
 
-df_selection = df[df.genre.isin(genres_selection) & df['year'].isin(year_selection_list)]
-reshaped_df = df_selection.pivot_table(index='year', columns='genre', values='gross', aggfunc='sum', fill_value=0)
-reshaped_df = reshaped_df.sort_values(by='year', ascending=False)
+/* Move block container higher */
+div.block-container.css-18e3th9.egzxvld2 {
+  margin-top: -5em;
+}
 
+/* Hide hamburger menu and footer */
+div.css-r698ls.e8zbici2, footer.css-ipbk5a.egzxvld4, footer.css-12gp8ed.eknhn3m4, div.vg-tooltip-element {
+  display: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Display DataFrame
+st.sidebar.header('Dashboard `version 2`')
 
-df_editor = st.data_editor(reshaped_df, height=212, use_container_width=True,
-                            column_config={"year": st.column_config.TextColumn("Year")},
-                            num_rows="dynamic")
-df_chart = pd.melt(df_editor.reset_index(), id_vars='year', var_name='genre', value_name='gross')
+st.sidebar.subheader('Heat map parameter')
+time_hist_color = st.sidebar.selectbox('Color by', ('temp_min', 'temp_max'))
 
-# Display chart
-chart = alt.Chart(df_chart).mark_line().encode(
-            x=alt.X('year:N', title='Year'),
-            y=alt.Y('gross:Q', title='Gross earnings ($)'),
-            color='genre:N'
-            ).properties(height=320)
-st.altair_chart(chart, use_container_width=True)
+st.sidebar.subheader('Donut chart parameter')
+donut_theta = st.sidebar.selectbox('Select data', ('q2', 'q3'))
+
+st.sidebar.subheader('Line chart parameters')
+plot_data = st.sidebar.multiselect('Select data', ['temp_min', 'temp_max'], ['temp_min', 'temp_max'])
+plot_height = st.sidebar.slider('Specify plot height', 200, 500, 250)
+
+st.sidebar.markdown('''
+---
+''')
+
+# Row A
+st.markdown('### Metrics')
+col1, col2, col3 = st.columns(3)
+col1.metric("Temperature", "70 °F", "1.2 °F")
+col2.metric("Wind", "9 mph", "-8%")
+col3.metric("Humidity", "86%", "4%")
+
+# Row B
+seattle_weather = pd.read_csv('https://raw.githubusercontent.com/tvst/plost/master/data/seattle-weather.csv',
+                              parse_dates=['date'])
+stocks = pd.read_csv('https://raw.githubusercontent.com/dataprofessor/data/master/stocks_toy.csv')
+
+c1, c2 = st.columns((7, 3))
+with c1:
+    st.markdown('### Heatmap')
+    plost.time_hist(
+        data=seattle_weather,
+        date='date',
+        x_unit='week',
+        y_unit='day',
+        color=time_hist_color,
+        aggregate='median',
+        legend=None,
+        height=345,
+        use_container_width=True)
+with c2:
+    st.markdown('### Donut chart')
+    plost.donut_chart(
+        data=stocks,
+        theta=donut_theta,
+        color='company',
+        legend='bottom',
+        use_container_width=True)
+
+# Row C
+st.markdown('### Line chart')
+st.line_chart(seattle_weather, x='date', y=plot_data, height=plot_height)
+
