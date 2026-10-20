@@ -181,7 +181,74 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
 .el.dim { opacity: 0.18; }
 .ph { display: grid; place-items: center; font-family: var(--mono); font-size: 9px; color: var(--muted); border: 1px dashed var(--line); border-radius: 3px; }
 
+/* ---------- Help button ---------- */
+.help { font-weight: 600; color: var(--fg); border-right: 1px solid var(--line); padding: 4px 4px 4px 0; padding-right: 10px; margin-right: 2px; }
+
+/* ---------- Welcome popup ---------- */
+.welcome {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(20, 33, 61, 0.45);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.welcome-card {
+  width: min(440px, 100%); background: var(--bg-hi); border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(20, 33, 61, 0.3);
+  padding: 28px 26px 22px; display: grid; gap: 14px; text-align: center; justify-items: center;
+  animation: pop .35s cubic-bezier(.2, 1.4, .4, 1);
+}
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+.welcome-card h2 { margin: 0; font-family: var(--serif); font-size: 30px; line-height: 1.2; }
+.welcome-card p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; max-width: 34ch; }
+.welcome-card .orbit { animation: spin 9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+.welcome-actions .primary { padding: 11px 20px; font-size: 15px; }
+.ghost { border: 1px solid var(--line); border-radius: 4px; padding: 11px 16px; font-size: 14px; }
+.dontshow { font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+
+/* ---------- Guided tour ---------- */
+.tour { position: fixed; inset: 0; z-index: 50; }
+.spot {
+  position: fixed; border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(20, 33, 61, 0.5), 0 0 0 3px #fff, 0 0 0 6px var(--sh3);
+  transition: left .6s cubic-bezier(.4, 0, .2, 1), top .6s cubic-bezier(.4, 0, .2, 1), width .6s cubic-bezier(.4, 0, .2, 1), height .6s cubic-bezier(.4, 0, .2, 1), border-radius .6s;
+}
+.cursor {
+  position: fixed; left: 0; top: 0; width: 30px; height: 30px; pointer-events: none; z-index: 2;
+  transition-property: transform; transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .3));
+}
+.cursor::after {
+  content: ""; position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--sh3); opacity: 0; transform: scale(.3);
+}
+.cursor.click::after { animation: ripple .55s ease-out; }
+@keyframes ripple { 0% { opacity: 1; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.6); } }
+.tour-card {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 3;
+  width: min(460px, calc(100% - 32px));
+  background: var(--bg-hi); border-radius: 10px; box-shadow: 0 18px 50px rgba(20, 33, 61, 0.35);
+  padding: 16px 18px 12px; display: grid; gap: 8px;
+  transition: top .4s, bottom .4s;
+}
+.tour-card.at-top { top: calc(16px + env(safe-area-inset-top, 0px)); }
+.tour-card.at-bottom { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.tour-step { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tour-card h3 { margin: 0; font-family: var(--serif); font-size: 22px; line-height: 1.2; }
+.tour-card p { margin: 0; font-size: 14.5px; line-height: 1.75; }
+.tour-progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; direction: ltr; }
+.tour-progress i { display: block; height: 100%; width: 0; background: var(--sh3); }
+.tour-dots { display: flex; gap: 4px; justify-content: center; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.tour-dots i.on { background: var(--fg); }
+.tour-ctl { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tour-ctl button { border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; }
+.tour-ctl .primary { border-color: var(--fg); }
+
 @media (max-width: 720px) {
+  .help span { display: none; }
   .panel {
     left: calc(12px + env(safe-area-inset-left, 0px));
     right: calc(12px + env(safe-area-inset-right, 0px));
@@ -246,6 +313,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     <label for="speed">السرعة</label>
     <input type="range" id="speed" min="0" max="3" step="0.05" value="1">
     <button id="pause" aria-label="إيقاف الحركة">❚❚</button>
+    <button class="help" id="help" aria-label="طريقة الاستخدام">؟ <span>طريقة الاستخدام</span></button>
   </div>
 </div>
 
@@ -272,6 +340,37 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
   <div class="legend" id="legend"></div>
   <div class="pt-wrap"><div class="pt" id="pt" dir="ltr"></div></div>
 </section>
+
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-card">
+    <svg width="72" height="72" viewBox="0 0 24 24" aria-hidden="true"><g class="orbit" style="transform-origin:12px 12px" fill="none" stroke-width="0.8"><ellipse cx="12" cy="12" rx="10.5" ry="4" stroke="#0891b2"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(60 12 12)" stroke="#16a34a"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(120 12 12)" stroke="#d97706"/></g><circle cx="12" cy="12" r="2" fill="#e11d48"/></svg>
+    <h2 id="welcomeTitle">أهلاً بكِ في مختبر الذرّة</h2>
+    <p>شاهدي شرحاً قصيراً، تقريباً دقيقة، يعلّمك كيف تستكشفين ذرّات عناصر الجدول الدوري الـ118.</p>
+    <div class="welcome-actions">
+      <button class="primary" id="startTour">▶ شاهدي الشرح</button>
+      <button class="ghost" id="skipTour">تخطّي وابدئي</button>
+    </div>
+    <label class="dontshow"><input type="checkbox" id="dontShow"> لا تُظهري هذه الرسالة مرة ثانية</label>
+  </div>
+</div>
+
+<div class="tour" id="tour" hidden>
+  <div class="spot" id="spot"></div>
+  <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l15 9.5-6.6 1.3 3.9 7.4-2.9 1.5-3.9-7.4L4 19z" fill="#14213d" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  <div class="tour-card at-bottom" id="tourCard" role="dialog" aria-live="polite" aria-label="شرح طريقة الاستخدام">
+    <div class="tour-step" id="tourStep"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-progress"><i id="tourBar"></i></div>
+    <div class="tour-dots" id="tourDots"></div>
+    <div class="tour-ctl">
+      <button id="tourPrev">→ السابق</button>
+      <button id="tourPause" aria-label="إيقاف مؤقت">❚❚ إيقاف</button>
+      <button id="tourNext" class="primary">التالي ←</button>
+      <button id="tourEnd">إنهاء ✕</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -706,7 +805,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     row.innerHTML = `<strong>${CLASS_PLURAL[cls]}</strong>`;
     Object.entries(CATS).filter(([, c]) => c.cls === cls).forEach(([key, c]) => {
       const b = document.createElement('button');
-      b.className = 'lg'; b.style.setProperty('--c', c.c);
+      b.className = 'lg'; b.style.setProperty('--c', c.c); b.dataset.key = key;
       b.setAttribute('aria-pressed', 'false');
       b.innerHTML = `<i></i>${c.name}`;
       b.addEventListener('click', () => {
@@ -783,6 +882,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     controls.autoRotate = !paused && !reduced;
   });
   window.addEventListener('keydown', (e) => {
+    if (!$('tour').hidden) { if (e.key === 'Escape') endTour(); return; }
+    if (!$('welcome').hidden) { if (e.key === 'Escape') closeWelcome(); return; }
     if (e.key === 'Escape' && !drawer.hidden) { closeTable(); return; }
     if (e.target.tagName === 'INPUT' || !drawer.hidden) return;
     if (e.key === 'ArrowLeft') select(current + 1);
@@ -858,6 +959,147 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
+
+  // ---------- Welcome popup + guided tour ----------
+  const welcome = $('welcome'), tour = $('tour'), spot = $('spot'), cursor = $('cursor'), card = $('tourCard');
+  let tourTok = 0, tourPaused = false, tourIdx = 0, beforeTour = current;
+
+  function closeWelcome() {
+    welcome.hidden = true;
+    try { if ($('dontShow').checked) localStorage.setItem('atomlab-skip-welcome', '1'); } catch (e) {}
+  }
+  $('skipTour').addEventListener('click', closeWelcome);
+  $('startTour').addEventListener('click', () => { closeWelcome(); startTour(); });
+  $('help').addEventListener('click', startTour);
+  try { if (localStorage.getItem('atomlab-skip-welcome') === '1') welcome.hidden = true; } catch (e) {}
+
+  // Timer that stops while the tour is paused and ends early when the step changes
+  function wait(ms, tok, onTick) {
+    return new Promise((res) => {
+      let t0 = 0;
+      const id = setInterval(() => {
+        if (tok !== tourTok) { clearInterval(id); res(false); return; }
+        if (!tourPaused) t0 += 50;
+        if (onTick) onTick(Math.min(1, t0 / ms));
+        if (t0 >= ms) { clearInterval(id); res(true); }
+      }, 50);
+    });
+  }
+  const visible = (el) => el && el.offsetParent !== null && el.getClientRects().length > 0;
+  function rectOf(target) {
+    if (target === 'atom') {
+      const w = innerWidth, h = innerHeight, s = Math.min(w, h) * 0.5;
+      return { left: w / 2 - s / 2, top: h / 2 - s / 2, width: s, height: s, round: true };
+    }
+    const r = target.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
+  function placeSpot(target) {
+    const r = rectOf(target), pad = 6;
+    Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px', borderRadius: r.round ? '50%' : '10px' });
+    const cy = r.top + r.height / 2;
+    card.classList.toggle('at-top', cy > innerHeight * 0.55);
+    card.classList.toggle('at-bottom', cy <= innerHeight * 0.55);
+  }
+  function moveCursor(x, y, ms = 800) {
+    cursor.style.transitionDuration = ms + 'ms';
+    cursor.style.transform = `translate(${x - 4}px, ${y - 2}px)`;
+  }
+  const centerOf = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  async function clickOn(el, tok) {
+    const [x, y] = centerOf(el);
+    moveCursor(x, y);
+    if (!(await wait(900, tok))) return false;
+    cursor.classList.remove('click'); void cursor.offsetWidth; cursor.classList.add('click');
+    el.click();
+    return wait(500, tok);
+  }
+  function ensureElement(z) { if (ELEMENTS[current].z !== z) select(z - 1); }
+  function ensureDrawer(open) { if (open && drawer.hidden) openTable(); if (!open && !drawer.hidden) closeTable(); }
+  function clearHighlight() { if (highlight) legend.querySelector(`.lg[data-key="${highlight}"]`).click(); }
+
+  const STEPS = [
+    { title: 'هذي هي الذرّة', text: 'في الوسط النواة: الكرات الحمراء بروتونات والزرقاء نيوترونات. والنقاط الملوّنة حولها إلكترونات تدور في مستويات الطاقة.',
+      setup() { ensureDrawer(false); ensureElement(26); }, target: () => 'atom' },
+    { title: 'دوّري الذرّة وكبّريها', text: 'اسحبي على الشاشة بالفأرة أو بإصبعك عشان تدوّرين الذرّة، ومرّري عجلة الفأرة أو باعدي إصبعيك عشان تكبّرين.',
+      setup() { ensureDrawer(false); }, target: () => 'atom',
+      async act(tok) {
+        const w = innerWidth, h = innerHeight;
+        moveCursor(w / 2 - Math.min(w, h) * 0.18, h / 2);
+        if (!(await wait(900, tok))) return;
+        moveCursor(w / 2 + Math.min(w, h) * 0.18, h / 2, 1600);
+        fit = null;
+        const axis = new THREE.Vector3(0, 1, 0);
+        let last = 0;
+        await wait(1600, tok, (p) => { camera.position.applyAxisAngle(axis, -(p - last) * Math.PI * 0.8); last = p; });
+      } },
+    { title: 'بطاقة العنصر', text: 'هنا كل معلومات العنصر: اسمه ورمزه، وهل هو فلز أو لا فلز أو شبه فلز، ونوعه، وحالته في درجة حرارة الغرفة: صلب أو سائل أو غاز.',
+      setup() { ensureDrawer(false); }, target: () => document.querySelector('.panel') },
+    { title: 'مستويات الطاقة', text: 'كل رقم هو عدد الإلكترونات في مستوى طاقة، وبنفس لون مداره في الذرّة. وتحته التوزيع الإلكتروني ومعلومة «هل تعلم؟».',
+      setup() { ensureDrawer(false); }, target: () => (visible(document.querySelector('.shell-block')) ? document.querySelector('.shell-block') : document.querySelector('.panel')) },
+    { title: 'العنصر التالي', text: 'اضغطي «التالي» عشان تنتقلين للعنصر اللي بعده في الجدول الدوري.',
+      setup() { ensureDrawer(false); ensureElement(26); }, target: () => $('next'), act: (tok) => clickOn($('next'), tok) },
+    { title: 'العنصر السابق', text: 'و«السابق» يرجّعك للعنصر اللي قبله.',
+      setup() { ensureDrawer(false); ensureElement(27); }, target: () => $('prev'), act: (tok) => clickOn($('prev'), tok) },
+    { title: 'افتحي الجدول الدوري', text: 'من زر «الجدول الدوري» يطلع لك الجدول كامل بالـ118 عنصراً.',
+      setup() { ensureDrawer(false); clearHighlight(); }, target: () => $('openTable'),
+      async act(tok) { await clickOn($('openTable'), tok); if (tok === tourTok) placeSpot($('pt')); } },
+    { title: 'أنواع العناصر', text: 'لون الخانة يبيّن نوع العنصر. اضغطي على أي نوع، مثل «هالوجين»، عشان تتظلّل عناصره. ولون الرمز يبيّن الحالة: أسود صلب، أزرق سائل، أحمر غاز.',
+      setup() { ensureDrawer(true); clearHighlight(); }, target: () => legend,
+      async act(tok) { await clickOn(legend.querySelector('.lg[data-key="halogen"]'), tok); if (tok === tourTok) placeSpot($('pt')); } },
+    { title: 'اختاري أي عنصر', text: 'اضغطي على أي عنصر في الجدول، مثل الأكسجين، وتطلع لك ذرّته على طول.',
+      setup() { ensureDrawer(true); clearHighlight(); },
+      target: () => { cells[7].scrollIntoView({ block: 'nearest', inline: 'center' }); return cells[7]; },
+      async act(tok) { await clickOn(cells[7], tok); if (tok === tourTok) placeSpot('atom'); } },
+    { title: 'تحكّمي بالحركة', text: 'من هنا تبطّئين حركة الإلكترونات أو تسرّعينها، أو توقفينها عشان تعدّينها بسهولة.',
+      setup() { ensureDrawer(false); clearHighlight(); }, target: () => document.querySelector('.ctl') },
+    { title: 'ارجعي للشرح أي وقت', text: 'إذا احتجتِ هذا الشرح مرة ثانية اضغطي «طريقة الاستخدام». استمتعي بالاستكشاف!',
+      setup() { ensureDrawer(false); }, target: () => $('help'), last: true },
+  ];
+  $('tourDots').innerHTML = STEPS.map(() => '<i></i>').join('');
+
+  async function runStep(i) {
+    const tok = ++tourTok;
+    tourIdx = i;
+    const s = STEPS[i];
+    s.setup && s.setup();
+    $('tourStep').textContent = `الخطوة ${i + 1} من ${STEPS.length}`;
+    $('tourTitle').textContent = s.title;
+    $('tourText').textContent = s.text;
+    $('tourBar').style.width = '0%';
+    [...$('tourDots').children].forEach((d, k) => d.classList.toggle('on', k <= i));
+    $('tourPrev').disabled = i === 0;
+    $('tourNext').textContent = s.last ? 'ابدئي الاستكشاف' : 'التالي ←';
+    if (!(await wait(120, tok))) return;
+    const target = s.target();
+    placeSpot(target);
+    if (!s.act) { const r = rectOf(target); moveCursor(r.left + r.width / 2, r.top + r.height / 2); }
+    if (s.act) { await s.act(tok); if (tok !== tourTok) return; }
+    const done = await wait(Math.max(4200, s.text.length * 55), tok, (p) => { $('tourBar').style.width = p * 100 + '%'; });
+    if (done && tok === tourTok && !s.last) runStep(i + 1);
+  }
+  function startTour() {
+    if (!welcome.hidden) welcome.hidden = true;
+    beforeTour = current;
+    tourPaused = false; $('tourPause').textContent = '❚❚ إيقاف';
+    tour.hidden = false;
+    moveCursor(innerWidth / 2, innerHeight - 40, 0);
+    runStep(0);
+  }
+  function endTour() {
+    tourTok++;
+    tour.hidden = true;
+    clearHighlight(); ensureDrawer(false);
+    select(beforeTour);
+  }
+  $('tourNext').addEventListener('click', () => (STEPS[tourIdx].last ? endTour() : runStep(tourIdx + 1)));
+  $('tourPrev').addEventListener('click', () => tourIdx > 0 && runStep(tourIdx - 1));
+  $('tourEnd').addEventListener('click', endTour);
+  $('tourPause').addEventListener('click', () => {
+    tourPaused = !tourPaused;
+    $('tourPause').textContent = tourPaused ? '▶ تشغيل' : '❚❚ إيقاف';
+  });
+  window.addEventListener('resize', () => { if (!tour.hidden) placeSpot(STEPS[tourIdx].target()); });
 
   // Open the element named in the link's #anchor (e.g. #Fe, #U)
   function fromHash() {
