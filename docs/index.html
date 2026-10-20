@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="نموذج تفاعلي ثلاثي الأبعاد لذرّات عناصر الجدول الدوري الـ118.">
+<meta property="og:title" content="مختبر الذرّة">
+<meta property="og:description" content="نموذج تفاعلي ثلاثي الأبعاد لذرّات عناصر الجدول الدوري الـ118.">
+<style>[hidden]{display:none!important} body{margin:0}</style>
+<title>مختبر الذرّة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: full-bleed WebGL stage on a light lab ground; title block and controls top-left, element card top-right, navigation bar along the bottom that opens the full periodic table. */
+:root {
+  --bg: #f4f6fb;
+  --bg-hi: #ffffff;
+  --fg: #14213d;
+  --muted: #5b6785;
+  --line: rgba(20, 33, 61, 0.13);
+  --surface: rgba(255, 255, 255, 0.9);
+  --proton: #e11d48;
+  --neutron: #2563eb;
+  --accent: #14213d;
+  --sh1: #0891b2; --sh2: #16a34a; --sh3: #d97706; --sh4: #ea580c; --sh5: #db2777; --sh6: #7c3aed; --sh7: #2563eb;
+  --st-solid: #14213d; --st-liquid: #2563eb; --st-gas: #dc2626; --st-unknown: #94a3b8;
+  --serif: "Amiri", "Noto Naskh Arabic", "Times New Roman", serif;
+  --body: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  background: radial-gradient(85% 70% at 50% 42%, var(--bg-hi) 0%, var(--bg) 70%);
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  overflow: hidden;
+  direction: rtl;
+}
+#stage { position: fixed; inset: 0; }
+#stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#stage canvas:active { cursor: grabbing; }
+button {
+  font: inherit; font-size: 13px; color: var(--fg); background: transparent;
+  border: 0; padding: 8px 12px; cursor: pointer;
+}
+button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outline-offset: 2px; }
+
+/* ---------- Element card ---------- */
+.panel {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  width: 310px;
+  max-height: calc(100% - 110px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  gap: 14px;
+}
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.ident { display: flex; align-items: center; gap: 16px; }
+.sym {
+  font-family: var(--mono); font-weight: 600; font-size: 54px; line-height: 1;
+  color: var(--fg); direction: ltr;
+  min-width: 2.4ch; text-align: center;
+  padding: 12px 6px 6px; background: var(--bg-hi);
+  border: 1px solid var(--line); border-top: 4px solid var(--c, var(--line)); border-radius: 4px;
+  position: relative;
+}
+.sym::after { content: attr(data-z); position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: 400; color: var(--muted); }
+.name { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.mass { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.mass span, .stats dd { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; line-height: 1.6; }
+.chip.cls { border: 1.5px solid var(--fg); color: var(--fg); }
+.chip.cat { color: #fff; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.stats div { border-top: 1px solid var(--line); padding-top: 8px; min-width: 0; }
+.stats dt { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.stats dd { margin: 2px 0 0; font-size: 21px; font-weight: 600; }
+.stats dd.txt { font-family: var(--body); font-size: 16px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.p { background: var(--proton); }
+.dot.n { background: var(--neutron); }
+.dot.e { background: conic-gradient(var(--sh1), var(--sh2), var(--sh3), var(--sh5), var(--sh1)); }
+.origin { font-size: 12px; color: var(--muted); margin-top: -6px; }
+.origin b { color: var(--st-gas); font-weight: 600; }
+.block h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
+.mono { font-family: var(--mono); font-size: 14px; line-height: 1.6; word-break: break-word; }
+#shells { direction: ltr; text-align: right; font-size: 17px; letter-spacing: 0.04em; color: var(--muted); }
+#shells b { font-weight: 600; }
+#conf { font-size: 13px; }
+#conf sup { font-size: 0.7em; color: var(--sh1); }
+.fact { font-size: 13.5px; line-height: 1.7; border-right: 3px solid var(--sh3); padding-right: 10px; }
+.fact h3 { color: var(--sh3); font-weight: 600; }
+
+/* ---------- Title + speed ---------- */
+.topbar {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+}
+.brand { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.brand svg { flex: none; }
+.brand h1 { margin: 0; font-family: var(--serif); font-size: 28px; font-weight: 700; line-height: 1.1; color: var(--fg); }
+.brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; font-size: 13px; color: var(--muted); }
+.ctl input[type="range"] { width: 110px; accent-color: var(--accent); }
+.ctl button { padding: 4px 4px; }
+
+/* ---------- Bottom bar ---------- */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface); border-top: 1px solid var(--line);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.nav { border: 1px solid var(--line); border-radius: 4px; background: var(--bg-hi); }
+.cur { display: inline-flex; align-items: baseline; gap: 8px; min-width: 150px; justify-content: center; font-size: 15px; }
+.cur b { font-family: var(--mono); font-size: 18px; color: var(--c, var(--fg)); }
+.cur span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.primary { background: var(--fg); color: #fff; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.primary svg { flex: none; }
+.hint {
+  position: fixed; margin: 0;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  font-size: 12px; color: var(--muted);
+}
+
+/* ---------- Periodic table drawer ---------- */
+.drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  max-height: 92%;
+  overflow-y: auto;
+  background: var(--bg-hi);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -16px 40px rgba(20, 33, 61, 0.14);
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 12px;
+}
+.drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.drawer-head h2 { margin: 0; font-family: var(--serif); font-size: 26px; }
+.drawer-head p { margin: 0; font-size: 12px; color: var(--muted); }
+.close { border: 1px solid var(--line); border-radius: 4px; }
+.legend { display: grid; gap: 6px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.legend-row > strong { font-size: 12px; min-width: 70px; }
+.lg { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 6px; background: var(--bg-hi); }
+.lg i { width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+.lg[aria-pressed="true"] { background: var(--c); color: #fff; border-color: var(--c); }
+.lg[aria-pressed="true"] i { background: #fff; }
+.statekey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.statekey span b { font-family: var(--mono); }
+.pt-wrap { overflow-x: auto; max-width: 1100px; width: 100%; margin: 0 auto; padding-bottom: 4px; }
+.pt {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(36px, 1fr));
+  grid-template-rows: repeat(7, auto) 12px repeat(2, auto);
+  gap: 3px; min-width: 690px;
+}
+.el {
+  position: relative; padding: 3px 2px 2px; height: 46px;
+  border-radius: 3px; border: 1px solid transparent; border-top: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) 13%, #fff);
+  display: grid; grid-template-rows: auto 1fr; text-align: center; direction: ltr;
+  transition: transform .15s, opacity .2s, box-shadow .15s;
+}
+.el small { font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: left; padding-left: 2px; line-height: 1; }
+.el strong { font-family: var(--mono); font-size: clamp(12px, 1.5vw, 17px); font-weight: 600; align-self: center; line-height: 1; }
+.el.s-solid strong { color: var(--st-solid); }
+.el.s-liquid strong { color: var(--st-liquid); }
+.el.s-gas strong { color: var(--st-gas); }
+.el.s-unknown strong { color: var(--st-unknown); }
+.el:hover { transform: scale(1.12); z-index: 2; box-shadow: 0 4px 12px rgba(20, 33, 61, 0.2); }
+.el[aria-current="true"] { background: var(--c); border-color: var(--c); }
+.el[aria-current="true"] strong, .el[aria-current="true"] small { color: #fff; }
+.el.dim { opacity: 0.18; }
+.ph { display: grid; place-items: center; font-family: var(--mono); font-size: 9px; color: var(--muted); border: 1px dashed var(--line); border-radius: 3px; }
+
+/* ---------- Help button ---------- */
+.help { font-weight: 600; color: var(--fg); border-right: 1px solid var(--line); padding: 4px 4px 4px 0; padding-right: 10px; margin-right: 2px; }
+
+/* ---------- Welcome popup ---------- */
+.welcome {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(20, 33, 61, 0.45);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.welcome-card {
+  width: min(440px, 100%); background: var(--bg-hi); border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(20, 33, 61, 0.3);
+  padding: 28px 26px 22px; display: grid; gap: 14px; text-align: center; justify-items: center;
+  animation: pop .35s cubic-bezier(.2, 1.4, .4, 1);
+}
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+.welcome-card h2 { margin: 0; font-family: var(--serif); font-size: 30px; line-height: 1.2; }
+.welcome-card p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; max-width: 34ch; }
+.welcome-card .orbit { animation: spin 9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+.welcome-actions .primary { padding: 11px 20px; font-size: 15px; }
+.ghost { border: 1px solid var(--line); border-radius: 4px; padding: 11px 16px; font-size: 14px; }
+.dontshow { font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+
+/* ---------- Guided tour ---------- */
+.tour { position: fixed; inset: 0; z-index: 50; }
+.spot {
+  position: fixed; border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(20, 33, 61, 0.5), 0 0 0 3px #fff, 0 0 0 6px var(--sh3);
+  transition: left .6s cubic-bezier(.4, 0, .2, 1), top .6s cubic-bezier(.4, 0, .2, 1), width .6s cubic-bezier(.4, 0, .2, 1), height .6s cubic-bezier(.4, 0, .2, 1), border-radius .6s;
+}
+.cursor {
+  position: fixed; left: 0; top: 0; width: 30px; height: 30px; pointer-events: none; z-index: 2;
+  transition-property: transform; transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .3));
+}
+.cursor::after {
+  content: ""; position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--sh3); opacity: 0; transform: scale(.3);
+}
+.cursor.click::after { animation: ripple .55s ease-out; }
+@keyframes ripple { 0% { opacity: 1; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.6); } }
+.tour-card {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 3;
+  width: min(460px, calc(100% - 32px));
+  background: var(--bg-hi); border-radius: 10px; box-shadow: 0 18px 50px rgba(20, 33, 61, 0.35);
+  padding: 16px 18px 12px; display: grid; gap: 8px;
+  transition: top .4s, bottom .4s;
+}
+.tour-card.at-top { top: calc(16px + env(safe-area-inset-top, 0px)); }
+.tour-card.at-bottom { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.tour-step { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tour-card h3 { margin: 0; font-family: var(--serif); font-size: 22px; line-height: 1.2; }
+.tour-card p { margin: 0; font-size: 14.5px; line-height: 1.75; }
+.tour-progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; direction: ltr; }
+.tour-progress i { display: block; height: 100%; width: 0; background: var(--sh3); }
+.tour-dots { display: flex; gap: 4px; justify-content: center; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.tour-dots i.on { background: var(--fg); }
+.tour-ctl { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tour-ctl button { border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; }
+.tour-ctl .primary { border-color: var(--fg); }
+
+@media (max-width: 720px) {
+  .help span { display: none; }
+  .panel {
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    width: auto; padding: 12px 14px; gap: 10px;
+    max-height: 48%;
+  }
+  .eyebrow, .conf-block, .fact, .shell-block { display: none; }
+  .sym { font-size: 34px; }
+  .name { font-size: 22px; }
+  .chips { margin-top: 4px; }
+  .stats dd { font-size: 16px; }
+  .stats dd.txt { font-size: 14px; }
+  .stats dt { font-size: 10px; }
+  .topbar { top: auto; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); align-items: center; }
+  .brand, .hint { display: none; }
+  .cur { min-width: 0; }
+  .cur span { display: none; }
+  .bar { gap: 6px; }
+  .bar button { padding: 8px 10px; }
+  .legend-row > strong { min-width: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div id="stage" aria-label="نموذج ذرّة ثلاثي الأبعاد قابل للتدوير"></div>
+
+<aside class="panel" aria-live="polite">
+  <div class="eyebrow"><span>العدد الذري <span id="zLbl"></span></span><span id="posLbl"></span></div>
+  <div class="ident">
+    <div class="sym" id="sym" data-z=""></div>
+    <div>
+      <div class="name" id="name"></div>
+      <div class="mass">العدد الكتلي <span id="A"></span></div>
+      <div class="chips"><span class="chip cls" id="cls"></span><span class="chip cat" id="cat"></span></div>
+    </div>
+  </div>
+  <dl class="stats">
+    <div><dt>الحالة</dt><dd class="txt" id="state"></dd></div>
+    <div><dt>الدورة</dt><dd id="period"></dd></div>
+    <div><dt>المجموعة</dt><dd id="group"></dd></div>
+  </dl>
+  <div class="origin" id="origin"></div>
+  <dl class="stats">
+    <div><dt><i class="dot p"></i>بروتونات</dt><dd id="np"></dd></div>
+    <div><dt><i class="dot n"></i>نيوترونات</dt><dd id="nn"></dd></div>
+    <div><dt><i class="dot e"></i>إلكترونات</dt><dd id="ne"></dd></div>
+  </dl>
+  <div class="block shell-block"><h3>مستويات الطاقة</h3><div id="shells" class="mono"></div></div>
+  <div class="block conf-block"><h3>التوزيع الإلكتروني</h3><div id="conf" class="mono" dir="ltr"></div></div>
+  <div class="block fact"><h3>هل تعلم؟</h3><div id="fact"></div></div>
+</aside>
+
+<div class="topbar">
+  <header class="brand">
+    <div>
+      <h1>مختبر الذرّة</h1>
+      <p>نموذج تفاعلي لبنية الذرّة · الكيمياء</p>
+    </div>
+    <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#14213d" stroke-width="1"><ellipse cx="12" cy="12" rx="10.5" ry="4"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(120 12 12)"/></g><circle cx="12" cy="12" r="1.9" fill="#14213d"/></svg>
+  </header>
+  <div class="ctl">
+    <label for="speed">السرعة</label>
+    <input type="range" id="speed" min="0" max="3" step="0.05" value="1">
+    <button id="pause" aria-label="إيقاف الحركة">❚❚</button>
+    <button class="help" id="help" aria-label="طريقة الاستخدام">؟ <span>طريقة الاستخدام</span></button>
+  </div>
+</div>
+
+<p class="hint">اسحب للتدوير · مرّر للتكبير · الأسهم ← → لتغيير العنصر</p>
+
+<div class="bar">
+  <button class="nav" id="prev" aria-label="العنصر السابق">→ السابق</button>
+  <div class="cur" id="cur"></div>
+  <button class="nav" id="next" aria-label="العنصر التالي">التالي ←</button>
+  <button class="primary" id="openTable" aria-expanded="false" aria-controls="drawer">
+    <svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" fill="currentColor"><rect x="0" y="0" width="3" height="3"/><rect x="15" y="0" width="3" height="3"/><rect x="0" y="4" width="3" height="3"/><rect x="4" y="4" width="3" height="3"/><rect x="11" y="4" width="3" height="3"/><rect x="15" y="4" width="3" height="3"/><rect x="0" y="8" width="18" height="3" opacity=".6"/><rect x="4" y="12" width="14" height="2" opacity=".4"/></svg>
+    الجدول الدوري
+  </button>
+</div>
+
+<section class="drawer" id="drawer" hidden aria-label="الجدول الدوري">
+  <div class="drawer-head">
+    <div>
+      <h2>الجدول الدوري</h2>
+      <p>118 عنصراً · اضغط أي عنصر لعرض ذرّته</p>
+    </div>
+    <button class="close" id="closeTable">إغلاق ✕</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="pt-wrap"><div class="pt" id="pt" dir="ltr"></div></div>
+</section>
+
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-card">
+    <svg width="72" height="72" viewBox="0 0 24 24" aria-hidden="true"><g class="orbit" style="transform-origin:12px 12px" fill="none" stroke-width="0.8"><ellipse cx="12" cy="12" rx="10.5" ry="4" stroke="#0891b2"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(60 12 12)" stroke="#16a34a"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(120 12 12)" stroke="#d97706"/></g><circle cx="12" cy="12" r="2" fill="#e11d48"/></svg>
+    <h2 id="welcomeTitle">أهلاً بكِ في مختبر الذرّة</h2>
+    <p>شاهدي شرحاً قصيراً، تقريباً دقيقة، يعلّمك كيف تستكشفين ذرّات عناصر الجدول الدوري الـ118.</p>
+    <div class="welcome-actions">
+      <button class="primary" id="startTour">▶ شاهدي الشرح</button>
+      <button class="ghost" id="skipTour">تخطّي وابدئي</button>
+    </div>
+    <label class="dontshow"><input type="checkbox" id="dontShow"> لا تُظهري هذه الرسالة مرة ثانية</label>
+  </div>
+</div>
+
+<div class="tour" id="tour" hidden>
+  <div class="spot" id="spot"></div>
+  <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l15 9.5-6.6 1.3 3.9 7.4-2.9 1.5-3.9-7.4L4 19z" fill="#14213d" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  <div class="tour-card at-bottom" id="tourCard" role="dialog" aria-live="polite" aria-label="شرح طريقة الاستخدام">
+    <div class="tour-step" id="tourStep"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-progress"><i id="tourBar"></i></div>
+    <div class="tour-dots" id="tourDots"></div>
+    <div class="tour-ctl">
+      <button id="tourPrev">→ السابق</button>
+      <button id="tourPause" aria-label="إيقاف مؤقت">❚❚ إيقاف</button>
+      <button id="tourNext" class="primary">التالي ←</button>
+      <button id="tourEnd">إنهاء ✕</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+  // ---------- Data ----------
+  const SYMBOLS = 'H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og'.split(' ');
+  const NAMES = ('هيدروجين،هيليوم،ليثيوم،بيريليوم،بورون،كربون،نيتروجين،أكسجين،فلور،نيون،صوديوم،مغنيسيوم،ألومنيوم،سيليكون،فوسفور،كبريت،كلور،أرغون،بوتاسيوم،كالسيوم،' +
+    'سكانديوم،تيتانيوم،فاناديوم،كروم،منغنيز،حديد،كوبالت،نيكل،نحاس،خارصين (زنك)،غاليوم،جرمانيوم،زرنيخ،سيلينيوم،بروم،كريبتون،روبيديوم،سترونشيوم،إتريوم،زركونيوم،' +
+    'نيوبيوم،موليبدينوم،تكنيشيوم،روثينيوم،روديوم،بالاديوم،فضة،كادميوم،إنديوم،قصدير،أنتيمون،تيلوريوم،يود،زينون،سيزيوم،باريوم،لانثانوم،سيريوم،براسيوديميوم،نيوديميوم،' +
+    'بروميثيوم،ساماريوم،يوروبيوم،غادولينيوم،تيربيوم،ديسبروسيوم،هولميوم،إربيوم،ثوليوم،إيتربيوم،لوتيشيوم،هافنيوم،تنتالوم،تنغستن،رينيوم،أوزميوم،إيريديوم،بلاتين،ذهب،زئبق،' +
+    'ثاليوم،رصاص،بزموت،بولونيوم،أستاتين،رادون،فرانسيوم،راديوم،أكتينيوم،ثوريوم،بروتكتينيوم،يورانيوم،نبتونيوم،بلوتونيوم،أمريسيوم،كوريوم،بركيليوم،كاليفورنيوم،أينشتاينيوم،فيرميوم،' +
+    'مندليفيوم،نوبليوم،لورنسيوم،رذرفورديوم،دوبنيوم،سيبورغيوم،بوريوم،هاسيوم،مايتنريوم،دارمشتاتيوم،رونتجينيوم،كوبرنيسيوم،نيهونيوم،فليروفيوم،موسكوفيوم،ليفرموريوم،تينيسين،أوغانيسون').split('،');
+  // Mass number: rounded standard atomic weight; for radioactive elements, the most stable isotope
+  const MASS = [1,4,7,9,11,12,14,16,19,20,23,24,27,28,31,32,35,40,39,40,45,48,51,52,55,56,59,59,64,65,70,73,75,79,80,84,85,88,89,91,
+    93,96,98,101,103,106,108,112,115,119,122,128,127,131,133,137,139,140,141,144,145,150,152,157,159,163,165,167,169,173,175,178,181,184,186,190,192,195,197,201,
+    204,207,209,209,210,222,223,226,227,232,231,238,237,244,243,247,247,251,252,257,258,259,266,267,268,269,270,270,278,281,282,285,286,289,290,293,294,294];
+
+  const CATS = {
+    alkali: { name: 'فلز قلوي', c: '#dc2626', cls: 'metal' },
+    alkaline: { name: 'فلز قلوي ترابي', c: '#ea580c', cls: 'metal' },
+    transition: { name: 'فلز انتقالي', c: '#db2777', cls: 'metal' },
+    post: { name: 'فلز بعد انتقالي', c: '#64748b', cls: 'metal' },
+    lanthanide: { name: 'لانثانيد', c: '#0284c7', cls: 'metal' },
+    actinide: { name: 'أكتينيد', c: '#65a30d', cls: 'metal' },
+    metalloid: { name: 'شبه فلز', c: '#0d9488', cls: 'metalloid' },
+    nonmetal: { name: 'لا فلز نشط', c: '#16a34a', cls: 'nonmetal' },
+    halogen: { name: 'هالوجين', c: '#ca8a04', cls: 'nonmetal' },
+    noble: { name: 'غاز نبيل', c: '#7c3aed', cls: 'nonmetal' },
+  };
+  const CLASSES = { metal: 'فلز', metalloid: 'شبه فلز', nonmetal: 'لا فلز' };
+  const CLASS_PLURAL = { metal: 'فلزات', metalloid: 'أشباه فلزات', nonmetal: 'لا فلزات' };
+  const STATES = { solid: 'صلب', liquid: 'سائل', gas: 'غاز', unknown: 'غير معروف' };
+
+  function categoryOf(z) {
+    if ([1, 6, 7, 8, 15, 16, 34].includes(z)) return 'nonmetal';
+    if ([9, 17, 35, 53, 85, 117].includes(z)) return 'halogen';
+    if ([2, 10, 18, 36, 54, 86, 118].includes(z)) return 'noble';
+    if ([3, 11, 19, 37, 55, 87].includes(z)) return 'alkali';
+    if ([4, 12, 20, 38, 56, 88].includes(z)) return 'alkaline';
+    if ([5, 14, 32, 33, 51, 52].includes(z)) return 'metalloid';
+    if (z >= 57 && z <= 71) return 'lanthanide';
+    if (z >= 89 && z <= 103) return 'actinide';
+    if ([13, 31, 49, 50, 81, 82, 83, 84, 113, 114, 115, 116].includes(z)) return 'post';
+    return 'transition';
+  }
+  // State at room temperature (25 °C); elements from fermium on have never been made in visible amounts
+  function stateOf(z) {
+    if ([1, 2, 7, 8, 9, 10, 17, 18, 36, 54, 86].includes(z)) return 'gas';
+    if (z === 35 || z === 80) return 'liquid';
+    if (z >= 100) return 'unknown';
+    return 'solid';
+  }
+  // Grid position in the standard 18-column table; f-block in rows 9-10
+  function positionOf(z) {
+    if (z >= 57 && z <= 71) return { row: 9, col: z - 54, period: 6, group: null };
+    if (z >= 89 && z <= 103) return { row: 10, col: z - 86, period: 7, group: null };
+    if (z === 1) return { row: 1, col: 1, period: 1, group: 1 };
+    if (z === 2) return { row: 1, col: 18, period: 1, group: 18 };
+    const starts = [3, 11, 19, 37, 55, 87];
+    let p = 0; while (p + 1 < starts.length && z >= starts[p + 1]) p++;
+    const period = p + 2, o = z - starts[p];
+    let col;
+    if (period <= 3) col = o < 2 ? o + 1 : o + 11;
+    else if (period <= 5) col = o + 1;
+    else col = o < 2 ? o + 1 : o - 13;
+    return { row: period, col, period, group: col };
+  }
+
+  const FACTS = {
+    H: 'أخف العناصر وأكثرها انتشاراً في الكون، ويكوّن نحو 75% من كتلة المادة العادية فيه.',
+    He: 'لا يتجمد تحت الضغط العادي حتى قرب الصفر المطلق، ويُستخدم لتبريد مغناطيسات أجهزة الرنين المغناطيسي.',
+    Li: 'أخف الفلزات على الإطلاق، وهو أساس بطاريات الجوالات والسيارات الكهربائية.',
+    Be: 'خفيف وقوي جداً، ومنه صُنعت مرايا تلسكوب جيمس ويب الفضائي.',
+    B: 'يدخل في صناعة زجاج البوروسيليكات المقاوم للحرارة المستخدم في أدوات المختبر.',
+    C: 'أساس الكيمياء العضوية والحياة كلها، ومنه يتكوّن الألماس والجرافيت.',
+    N: 'يكوّن نحو 78% من الهواء الذي نتنفسه.',
+    O: 'أكثر العناصر وفرة في القشرة الأرضية، ويكوّن نحو 21% من الهواء.',
+    F: 'أكثر العناصر نشاطاً كيميائياً، ومركّباته تُضاف إلى معجون الأسنان لحماية المينا.',
+    Ne: 'يعطي الضوء الأحمر البرتقالي المعروف في لافتات النيون.',
+    Na: 'فلز طري يُقطع بالسكين ويتفاعل بعنف مع الماء، وهو نصف ملح الطعام.',
+    Mg: 'يحترق بضوء أبيض ساطع، ويوجد في مركز جزيء الكلوروفيل في النباتات.',
+    Al: 'أكثر الفلزات وفرة في القشرة الأرضية، ومنه تُصنع علب المشروبات.',
+    Si: 'أساس رقائق الحاسوب والألواح الشمسية، ويوجد في رمل الصحراء.',
+    P: 'الفوسفور الأحمر يُستخدم في الشريط الجانبي لعلب الكبريت، وهو جزء من جزيء DNA.',
+    S: 'عنصر أصفر اللون، ومنه يُصنع حمض الكبريتيك أحد أكثر المواد الكيميائية إنتاجاً في العالم.',
+    Cl: 'غاز أصفر مخضر يُستخدم لتعقيم مياه الشرب، وهو النصف الآخر من ملح الطعام.',
+    Ar: 'ثالث أكثر غاز في الهواء بنسبة تقارب 1%، ويُملأ به بعض المصابيح.',
+    K: 'ضروري لعمل الأعصاب والعضلات، ويوجد بكثرة في الموز.',
+    Ca: 'أساس العظام والأسنان، ويوجد بكثرة في الحجر الجيري.',
+    Sc: 'يُضاف بكميات صغيرة إلى الألومنيوم لتقويته في هياكل الدراجات وبعض الطائرات.',
+    Ti: 'قوي مثل الفولاذ وأخف منه بنحو 45%، ويُستخدم في الطائرات والمفاصل الصناعية.',
+    V: 'يُضاف إلى الفولاذ لزيادة صلابته في أدوات مثل المفاتيح والمطارق.',
+    Cr: 'يعطي الفولاذ المقاوم للصدأ لمعانه، ويعطي الياقوت لونه الأحمر.',
+    Mn: 'ضروري لصناعة الفولاذ، ويوجد ثاني أكسيده في البطاريات القلوية.',
+    Fe: 'معظم لبّ الأرض من الحديد، وهو في الهيموغلوبين الذي ينقل الأكسجين في دمك.',
+    Co: 'يعطي الزجاج والخزف اللون الأزرق الكوبالتي، ويوجد في فيتامين B12.',
+    Ni: 'يُستخدم في العملات المعدنية وفي الفولاذ المقاوم للصدأ.',
+    Cu: 'من أفضل موصلات الكهرباء، ولذلك تُصنع منه معظم الأسلاك.',
+    Zn: 'يُطلى به الحديد لحمايته من الصدأ (الجلفنة)، وهو مهم لجهاز المناعة.',
+    Ga: 'ينصهر عند 29.8 درجة مئوية، أي يذوب في راحة اليد.',
+    Ge: 'من أوائل المواد التي صُنعت منها الترانزستورات.',
+    As: 'سام جداً، واستُخدمت مركّباته قديماً في المبيدات.',
+    Se: 'ضروري لجسم الإنسان بكميات ضئيلة، واستُخدم في آلات النسخ الضوئي.',
+    Br: 'أحد عنصرين فقط سائلين في درجة حرارة الغرفة، ولونه أحمر بني.',
+    Kr: 'كان المتر يُعرَّف بين 1960 و1983 بطول موجة ضوء ينبعث من الكريبتون.',
+    Rb: 'يشتعل تلقائياً في الهواء، ويُستخدم في الساعات الذرية.',
+    Sr: 'يعطي الألعاب النارية لونها الأحمر.',
+    Y: 'يدخل في صناعة مصابيح LED البيضاء وبعض أنواع الليزر.',
+    Zr: 'مقاوم للتآكل، وتُغلَّف به قضبان الوقود في المفاعلات النووية.',
+    Nb: 'يدخل في المغناطيسات فائقة التوصيل في أجهزة الرنين المغناطيسي.',
+    Mo: 'يتحمل حرارة عالية جداً، ويُضاف إلى الفولاذ لتقويته.',
+    Tc: 'أول عنصر حُضّر صناعياً سنة 1937، ويُستخدم في التصوير الطبي.',
+    Ru: 'يُضاف إلى البلاتين والبالاديوم لزيادة صلابتهما.',
+    Rh: 'من أغلى المعادن، ويُستخدم في المحولات الحفازة في السيارات.',
+    Pd: 'يمتص من الهيدروجين ما يصل إلى 900 ضعف حجمه.',
+    Ag: 'أعلى العناصر توصيلاً للكهرباء والحرارة.',
+    Cd: 'يُستخدم في بطاريات النيكل-كادميوم، لكنه سام.',
+    In: 'أكسيد الإنديوم والقصدير طبقة شفافة موصلة في شاشات اللمس.',
+    Sn: 'يُطلى به الحديد في علب الأغذية، ويكوّن البرونز عند خلطه بالنحاس.',
+    Sb: 'استُخدم مركّبه في الكحل منذ آلاف السنين.',
+    Te: 'يدخل في نوع من الألواح الشمسية مصنوع من تيلوريد الكادميوم.',
+    I: 'ضروري للغدة الدرقية، ولذلك يُضاف إلى ملح الطعام.',
+    Xe: 'يُستخدم في المصابيح الأمامية القوية للسيارات وفي محركات الدفع الأيوني للمركبات الفضائية.',
+    Cs: 'الساعات الذرية المعتمدة على السيزيوم هي التي تُعرِّف الثانية.',
+    Ba: 'يشرب المريض كبريتات الباريوم قبل تصوير الجهاز الهضمي بالأشعة السينية.',
+    La: 'يدخل في عدسات الكاميرات عالية الجودة وفي بطاريات بعض السيارات الهجينة.',
+    Ce: 'أكثر العناصر الأرضية النادرة وفرة، ويُستخدم في حجر القداحات.',
+    Pr: 'يعطي زجاج نظارات اللحّامين لوناً يحمي العين من الوهج.',
+    Nd: 'مغناطيسات النيوديميوم أقوى المغناطيسات الدائمة، وتوجد في السماعات والمحركات.',
+    Pm: 'عنصر مشع لا يوجد في الطبيعة إلا بكميات ضئيلة جداً.',
+    Sm: 'مغناطيسات السماريوم-كوبالت تحافظ على قوتها في درجات الحرارة العالية.',
+    Eu: 'يعطي اللون الأحمر في الشاشات، ويُستخدم في علامات الأمان على أوراق اليورو النقدية.',
+    Gd: 'يُحقن مركّبه للمرضى لتوضيح صور الرنين المغناطيسي.',
+    Tb: 'يعطي اللون الأخضر في بعض الشاشات والمصابيح الموفّرة.',
+    Dy: 'يُضاف إلى مغناطيسات النيوديميوم في السيارات الكهربائية لتتحمل الحرارة.',
+    Ho: 'من أقوى العناصر مغناطيسياً، ويُستخدم في بعض أنواع الليزر الطبي.',
+    Er: 'يُضاف إلى ألياف الإنترنت الضوئية لتقوية الإشارة.',
+    Tm: 'من أندر اللانثانيدات، ويُستخدم في أجهزة أشعة سينية محمولة.',
+    Yb: 'يُستخدم في بعض أدق الساعات الذرية الضوئية.',
+    Lu: 'آخر اللانثانيدات وأكثرها كثافة وصلابة.',
+    Hf: 'يمتص النيوترونات بقوة، فيُستخدم في قضبان التحكم بالمفاعلات النووية.',
+    Ta: 'يُستخدم في المكثفات الصغيرة داخل الجوالات.',
+    W: 'أعلى الفلزات درجة انصهار (نحو 3422 °C)، ومنه كانت فتائل المصابيح القديمة.',
+    Re: 'من أندر العناصر في القشرة الأرضية، ويُستخدم في محركات الطائرات النفاثة.',
+    Os: 'أكثر العناصر كثافة، نحو 22.6 غرام في السنتيمتر المكعب.',
+    Ir: 'من أكثر الفلزات مقاومة للتآكل، وطبقة غنية به في الصخور ترتبط بانقراض الديناصورات.',
+    Pt: 'أندر من الذهب، ويُستخدم في المحولات الحفازة والمجوهرات.',
+    Au: 'لا يصدأ ولا يتآكل، ويمكن سحب غرام واحد منه إلى سلك طوله أكثر من كيلومترين.',
+    Hg: 'الفلز الوحيد السائل في درجة حرارة الغرفة.',
+    Tl: 'شديد السمية، ولذلك سُمّي "سم المسمّمين".',
+    Pb: 'كثيف ولين، ويُستخدم للحماية من الأشعة السينية وفي بطاريات السيارات.',
+    Bi: 'يتبلور في أشكال ملوّنة تشبه الدرج، ويدخل في بعض أدوية المعدة.',
+    Po: 'اكتشفته ماري كوري وسمّته باسم وطنها بولندا.',
+    At: 'أندر عنصر طبيعي في القشرة الأرضية، ولا يتجاوز ما فيها منه غراماً واحداً تقريباً.',
+    Rn: 'غاز مشع يتسرب من الصخور وقد يتجمع في الأقبية.',
+    Fr: 'من أندر العناصر الطبيعية، وعمر النصف لأكثر نظائره استقراراً 22 دقيقة فقط.',
+    Ra: 'اكتشفه الزوجان كوري، وكان يُطلى به قديماً عقارب الساعات المضيئة.',
+    Ac: 'يتوهج بلون أزرق باهت في الظلام بسبب إشعاعه الشديد.',
+    Th: 'يُدرس وقوداً نووياً بديلاً لليورانيوم، وسُمّي باسم ثور في الأساطير الإسكندنافية.',
+    Pa: 'من أندر العناصر الطبيعية وأغلاها.',
+    U: 'أثقل عنصر يوجد في الطبيعة بكميات كبيرة، ويُستخدم وقوداً في محطات الطاقة النووية.',
+    Np: 'أول عنصر بعد اليورانيوم، وسُمّي على كوكب نبتون.',
+    Pu: 'سُمّي على بلوتو، ويولّد الكهرباء لمركبات فضائية مثل فوياجر.',
+    Am: 'توجد منه كمية ضئيلة في كثير من أجهزة كشف الدخان المنزلية.',
+    Cm: 'سُمّي تكريماً لماري وبيير كوري.',
+    Bk: 'سُمّي على مدينة بيركلي الأمريكية حيث حُضّر أول مرة.',
+    Cf: 'سُمّي على ولاية كاليفورنيا، ويُستخدم مصدراً للنيوترونات.',
+    Es: 'سُمّي تكريماً لأينشتاين، واكتُشف في حطام أول قنبلة هيدروجينية سنة 1952.',
+    Fm: 'سُمّي تكريماً للفيزيائي إنريكو فيرمي، واكتُشف مع الأينشتاينيوم.',
+    Md: 'سُمّي تكريماً لمندليف صاحب الجدول الدوري.',
+    No: 'سُمّي تكريماً لألفريد نوبل مؤسس جائزة نوبل.',
+    Lr: 'سُمّي تكريماً لإرنست لورنس مخترع المسرّع الدوراني (السيكلوترون).',
+    Rf: 'سُمّي تكريماً لرذرفورد مكتشف نواة الذرّة.',
+    Db: 'سُمّي على مدينة دوبنا الروسية التي فيها أحد أكبر مختبرات العناصر الثقيلة.',
+    Sg: 'سُمّي تكريماً لغلين سيبورغ، وكان حياً عند تسميته.',
+    Bh: 'سُمّي تكريماً لنيلز بور صاحب النموذج الذري الذي تراه أمامك.',
+    Hs: 'سُمّي على ولاية هِسن الألمانية.',
+    Mt: 'سُمّي تكريماً لليزا مايتنر التي شاركت في اكتشاف الانشطار النووي.',
+    Ds: 'سُمّي على مدينة دارمشتات الألمانية حيث اكتُشف.',
+    Rg: 'سُمّي تكريماً لرونتغن مكتشف الأشعة السينية.',
+    Cn: 'سُمّي تكريماً لكوبرنيكوس الذي قال إن الأرض تدور حول الشمس.',
+    Nh: 'أول عنصر يُكتشف في آسيا، وسُمّي على اليابان (نيهون).',
+    Fl: 'سُمّي على مختبر فليروف للتفاعلات النووية في روسيا.',
+    Mc: 'سُمّي على منطقة موسكو.',
+    Lv: 'سُمّي على مختبر لورنس ليفرمور الوطني الأمريكي.',
+    Ts: 'سُمّي على ولاية تينيسي الأمريكية.',
+    Og: 'آخر عنصر في الجدول الدوري حتى الآن، وسُمّي تكريماً للعالم يوري أوغانيسيان.',
+  };
+
+  const ELEMENTS = SYMBOLS.map((s, i) => {
+    const z = i + 1, cat = categoryOf(z);
+    return {
+      z, s, n: NAMES[i], N: MASS[i] - z, cat, cls: CATS[cat].cls, state: stateOf(z), ...positionOf(z),
+      radioactive: z === 43 || z === 61 || z >= 84,
+      synthetic: z === 43 || z === 61 || z >= 93,
+      f: FACTS[s],
+    };
+  });
+
+  // Real ground-state configurations that break the Aufbau order
+  const EXCEPTIONS = {
+    24: { '3d': 5, '4s': 1 }, 29: { '3d': 10, '4s': 1 },
+    41: { '4d': 4, '5s': 1 }, 42: { '4d': 5, '5s': 1 }, 44: { '4d': 7, '5s': 1 }, 45: { '4d': 8, '5s': 1 }, 46: { '4d': 10, '5s': 0 }, 47: { '4d': 10, '5s': 1 },
+    57: { '4f': 0, '5d': 1 }, 58: { '4f': 1, '5d': 1 }, 64: { '4f': 7, '5d': 1 },
+    78: { '5d': 9, '6s': 1 }, 79: { '5d': 10, '6s': 1 },
+    89: { '5f': 0, '6d': 1 }, 90: { '5f': 0, '6d': 2 }, 91: { '5f': 2, '6d': 1 }, 92: { '5f': 3, '6d': 1 }, 93: { '5f': 4, '6d': 1 }, 96: { '5f': 7, '6d': 1 },
+    103: { '6d': 0, '7p': 1 },
+  };
+  const ORDER = ['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s','5f','6d','7p'];
+  const CAP = { s: 2, p: 6, d: 10, f: 14 };
+  const L = 'spdf';
+
+  function configuration(z) {
+    const map = new Map();
+    let left = z;
+    for (const o of ORDER) {
+      if (left <= 0) break;
+      const k = Math.min(CAP[o[1]], left);
+      map.set(o, k); left -= k;
+    }
+    if (EXCEPTIONS[z]) for (const [o, k] of Object.entries(EXCEPTIONS[z])) map.set(o, k);
+    return [...map].filter(([, k]) => k > 0)
+      .map(([o, k]) => ({ o, n: +o[0], l: L.indexOf(o[1]), k }))
+      .sort((a, b) => a.n - b.n || a.l - b.l);
+  }
+
+  // ---------- Scene ----------
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0xffffff, 0);
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 800);
+  camera.position.set(6, 4, 14);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.enablePan = false;
+  controls.minDistance = 3;
+  controls.maxDistance = 160;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.5;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(5, 8, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xc7d2fe, 0.45); rim.position.set(-6, -3, -6); scene.add(rim);
+
+  function radialTexture(stops) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    stops.forEach(([p, a]) => gr.addColorStop(p, `rgba(255,255,255,${a})`));
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+  const GLOW = radialTexture([[0, 1], [0.3, 0.55], [1, 0]]);
+
+  function randomUnit() {
+    const u = Math.random() * 2 - 1, t = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+    return new THREE.Vector3(s * Math.cos(t), s * Math.sin(t), u);
+  }
+
+  // ---------- Nucleus ----------
+  const RS = 0.42;
+  function packNucleus(A) {
+    if (A === 1) return [[0, 0, 0]];
+    const R0 = RS * 1.3 * Math.cbrt(A);
+    const p = [];
+    for (let i = 0; i < A; i++) {
+      const v = randomUnit().multiplyScalar(R0 * Math.cbrt(Math.random()));
+      p.push([v.x, v.y, v.z]);
+    }
+    const d0 = RS * 1.85;
+    for (let it = 0; it < 45; it++) {
+      for (let i = 0; i < A; i++) {
+        const a = p[i];
+        for (let j = i + 1; j < A; j++) {
+          const b = p[j];
+          const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
+          const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          if (d < d0 && d > 1e-6) {
+            const f = (d0 - d) * 0.5 / d;
+            a[0] -= dx * f; a[1] -= dy * f; a[2] -= dz * f;
+            b[0] += dx * f; b[1] += dy * f; b[2] += dz * f;
+          }
+        }
+      }
+      for (const q of p) { q[0] *= 0.97; q[1] *= 0.97; q[2] *= 0.97; }
+    }
+    return p;
+  }
+
+  // ---------- Atom build ----------
+  const SPHERE = new THREE.SphereGeometry(RS, 24, 16);
+  const CORE = new THREE.SphereGeometry(0.16, 16, 12);
+  const TRAIL_PTS = 30, TRAIL_ARC = 1.1;
+  const SHELL_COLORS = [0x0891b2, 0x16a34a, 0xd97706, 0xea580c, 0xdb2777, 0x7c3aed, 0x2563eb];
+  const SHELL_CSS = ['--sh1', '--sh2', '--sh3', '--sh4', '--sh5', '--sh6', '--sh7'];
+  const GROUND = new THREE.Color(0xf4f6fb); // trails fade into the page background
+  let atom = null;
+
+  function disposeTree(obj) {
+    obj.traverse((o) => {
+      if (o.geometry && o.geometry !== SPHERE && o.geometry !== CORE) o.geometry.dispose();
+      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+    });
+  }
+
+  function build(el) {
+    if (atom) { scene.remove(atom.group); disposeTree(atom.group); }
+    const conf = configuration(el.z);
+    const A = el.z + el.N;
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Nucleus as instanced spheres
+    const pts = packNucleus(A);
+    const order = pts.map((_, i) => i).sort(() => Math.random() - 0.5);
+    const pMesh = new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0xe11d48, emissive: 0x3a0412, roughness: 0.35, metalness: 0.05 }), el.z);
+    const nMesh = el.N ? new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0x2563eb, emissive: 0x06143a, roughness: 0.4, metalness: 0.05 }), el.N) : null;
+    const nucleons = order.map((idx, k) => ({
+      base: pts[idx], mesh: k < el.z ? pMesh : nMesh, i: k < el.z ? k : k - el.z,
+      ph: Math.random() * Math.PI * 2, fr: 6 + Math.random() * 5,
+    }));
+    let rc = RS;
+    for (const q of pts) rc = Math.max(rc, Math.hypot(q[0], q[1], q[2]) + RS);
+    const nucleus = new THREE.Group();
+    nucleus.add(pMesh); if (nMesh) nucleus.add(nMesh);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xfb7185, transparent: true, opacity: 0.18, depthWrite: false }));
+    halo.scale.setScalar(rc * 4 + 1.5);
+    nucleus.add(halo);
+    group.add(nucleus);
+
+    // Bohr shells: electrons per principal level, big shells split into several orbital planes
+    const shellCounts = [];
+    conf.forEach((c) => { shellCounts[c.n - 1] = (shellCounts[c.n - 1] || 0) + c.k; });
+    const radii = [];
+    const bohr = new THREE.Group();
+    group.add(bohr);
+    const rings = [];
+    let r = rc + 2.0;
+    shellCounts.forEach((cnt, si) => {
+      radii.push(r);
+      const sc = new THREE.Color(SHELL_COLORS[si % SHELL_COLORS.length]);
+      const ringCount = Math.ceil(cnt / 8);
+      const pivot = new THREE.Group();
+      pivot.rotation.set(si * 0.9 + 0.4, si * 2.39996, 0);
+      pivot.userData.prec = 0.05 + 0.03 * si;
+      bohr.add(pivot);
+      for (let ri = 0; ri < ringCount; ri++) {
+        const n = Math.floor(cnt / ringCount) + (ri < cnt % ringCount ? 1 : 0);
+        const tilt = new THREE.Group();
+        tilt.rotation.set(0, (ri / ringCount) * Math.PI, ri * 0.35);
+        pivot.add(tilt);
+
+        const circ = [];
+        for (let a = 0; a <= 128; a++) { const t = a / 128 * Math.PI * 2; circ.push(new THREE.Vector3(Math.cos(t) * r, Math.sin(t) * r, 0)); }
+        tilt.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circ),
+          new THREE.LineBasicMaterial({ color: sc, transparent: true, opacity: 0.35, depthWrite: false })));
+
+        const electrons = [];
+        for (let k = 0; k < n; k++) {
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: sc, transparent: true, opacity: 0.35, depthWrite: false }));
+          sprite.scale.setScalar(0.9);
+          const core = new THREE.Mesh(CORE, new THREE.MeshBasicMaterial({ color: sc }));
+          const tg = new THREE.BufferGeometry();
+          tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_PTS * 3), 3));
+          const col = new Float32Array(TRAIL_PTS * 3), c = new THREE.Color();
+          for (let j = 0; j < TRAIL_PTS; j++) {
+            c.copy(sc).lerp(GROUND, Math.pow(j / (TRAIL_PTS - 1), 0.7));
+            col.set([c.r, c.g, c.b], j * 3);
+          }
+          tg.setAttribute('color', new THREE.BufferAttribute(col, 3));
+          const trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ vertexColors: true }));
+          tilt.add(trail, sprite, core);
+          electrons.push({ sprite, core, trail, off: (k / n) * Math.PI * 2 + ri * 0.6 });
+        }
+        rings.push({
+          r, electrons,
+          speed: 1.25 / Math.pow(si + 1, 0.75),
+          dir: (si + ri) % 2 ? -1 : 1,
+        });
+      }
+      r += 1.6;
+    });
+    const outerR = radii[radii.length - 1];
+
+    atom = { el, conf, group, nucleons, pMesh, nMesh, bohr, rings, outerR, born: performance.now() };
+    updatePanel();
+    fitCamera();
+  }
+
+  // ---------- UI ----------
+  let paused = false, speed = 1, current = 25; // iron
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) { speed = 0.3; controls.autoRotate = false; }
+  const $ = (id) => document.getElementById(id);
+  $('speed').value = speed;
+
+  // Periodic table
+  const pt = $('pt');
+  const cells = ELEMENTS.map((el, i) => {
+    const b = document.createElement('button');
+    b.className = `el s-${el.state}`;
+    b.dataset.cat = el.cat;
+    b.style.setProperty('--c', CATS[el.cat].c);
+    b.style.gridRow = el.row; b.style.gridColumn = el.col;
+    b.innerHTML = `<small>${el.z}</small><strong>${el.s}</strong>`;
+    b.title = `${el.n} · ${CATS[el.cat].name} · ${STATES[el.state]}`;
+    b.setAttribute('aria-label', `${el.n}، العدد الذري ${el.z}`);
+    b.addEventListener('click', () => { select(i); closeTable(); });
+    pt.appendChild(b);
+    return b;
+  });
+  [['57–71', 6], ['89–103', 7]].forEach(([label, row]) => {
+    const d = document.createElement('div');
+    d.className = 'ph'; d.textContent = label;
+    d.style.gridRow = row; d.style.gridColumn = 3;
+    pt.appendChild(d);
+  });
+
+  // Legend: grouped by metal / metalloid / nonmetal; tap a category to highlight it
+  let highlight = null;
+  const legend = $('legend');
+  ['metal', 'metalloid', 'nonmetal'].forEach((cls) => {
+    const row = document.createElement('div');
+    row.className = 'legend-row';
+    row.innerHTML = `<strong>${CLASS_PLURAL[cls]}</strong>`;
+    Object.entries(CATS).filter(([, c]) => c.cls === cls).forEach(([key, c]) => {
+      const b = document.createElement('button');
+      b.className = 'lg'; b.style.setProperty('--c', c.c); b.dataset.key = key;
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = `<i></i>${c.name}`;
+      b.addEventListener('click', () => {
+        highlight = highlight === key ? null : key;
+        legend.querySelectorAll('.lg').forEach((x) => x.setAttribute('aria-pressed', x === b && highlight ? 'true' : 'false'));
+        cells.forEach((cell) => cell.classList.toggle('dim', !!highlight && cell.dataset.cat !== highlight));
+      });
+      row.appendChild(b);
+    });
+    legend.appendChild(row);
+  });
+  const key2 = document.createElement('div');
+  key2.className = 'statekey';
+  key2.innerHTML = 'لون الرمز يبيّن الحالة عند درجة حرارة الغرفة: ' +
+    '<span><b style="color:var(--st-solid)">Fe</b> صلب</span>' +
+    '<span><b style="color:var(--st-liquid)">Hg</b> سائل</span>' +
+    '<span><b style="color:var(--st-gas)">O</b> غاز</span>' +
+    '<span><b style="color:var(--st-unknown)">Og</b> غير معروف</span>';
+  legend.appendChild(key2);
+
+  const drawer = $('drawer');
+  function openTable() {
+    drawer.hidden = false; $('openTable').setAttribute('aria-expanded', 'true');
+    cells[current].focus({ preventScroll: true });
+    cells[current].scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+  function closeTable() { drawer.hidden = true; $('openTable').setAttribute('aria-expanded', 'false'); }
+  $('openTable').addEventListener('click', openTable);
+  $('closeTable').addEventListener('click', closeTable);
+  $('prev').addEventListener('click', () => select(current - 1));
+  $('next').addEventListener('click', () => select(current + 1));
+
+  function select(i) {
+    current = (i + ELEMENTS.length) % ELEMENTS.length;
+    cells.forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
+    build(ELEMENTS[current]);
+  }
+
+  function updatePanel() {
+    const { el, conf } = atom;
+    const cat = CATS[el.cat];
+    $('zLbl').textContent = el.z;
+    $('posLbl').textContent = el.group ? `الدورة ${el.period} · المجموعة ${el.group}` : `الدورة ${el.period} · ${cat.name}ات`;
+    $('sym').textContent = el.s; $('sym').dataset.z = el.z;
+    $('sym').style.setProperty('--c', cat.c);
+    $('name').textContent = el.n;
+    $('A').textContent = el.z + el.N;
+    $('cls').textContent = CLASSES[el.cls];
+    $('cat').textContent = cat.name; $('cat').style.background = cat.c;
+    $('state').textContent = STATES[el.state];
+    $('state').style.color = `var(--st-${el.state})`;
+    $('period').textContent = el.period;
+    $('group').textContent = el.group || '—';
+    $('origin').innerHTML = (el.synthetic ? 'عنصر صناعي' : 'يوجد في الطبيعة') + (el.radioactive ? ' · <b>مشع</b>' : ' · مستقر');
+    $('fact').textContent = el.f || `${el.n} ${cat.name}، ${STATES[el.state] === 'غير معروف' ? 'وحالته الفيزيائية غير معروفة' : 'حالته ' + STATES[el.state]} في درجة حرارة الغرفة.`;
+    $('np').textContent = el.z; $('nn').textContent = el.N; $('ne').textContent = el.z;
+    const shells = [];
+    conf.forEach((c) => { shells[c.n - 1] = (shells[c.n - 1] || 0) + c.k; });
+    $('shells').innerHTML = shells.map((s, i) => `<b style="color:var(${SHELL_CSS[i]})">${s}</b>`).join(' · ');
+    $('conf').innerHTML = conf.map((c) => `${c.n}${L[c.l]}<sup>${c.k}</sup>`).join(' ');
+    const cur = $('cur');
+    cur.style.setProperty('--c', cat.c);
+    cur.innerHTML = `<b></b><strong></strong><span></span>`;
+    cur.querySelector('b').textContent = el.s;
+    cur.querySelector('strong').textContent = el.n;
+    cur.querySelector('span').textContent = `${el.z} / 118`;
+  }
+
+  $('speed').addEventListener('input', (e) => { speed = +e.target.value; });
+  $('pause').addEventListener('click', () => {
+    paused = !paused;
+    $('pause').textContent = paused ? '▶' : '❚❚';
+    $('pause').setAttribute('aria-label', paused ? 'تشغيل الحركة' : 'إيقاف الحركة');
+    controls.autoRotate = !paused && !reduced;
+  });
+  window.addEventListener('keydown', (e) => {
+    if (!$('tour').hidden) { if (e.key === 'Escape') endTour(); return; }
+    if (!$('welcome').hidden) { if (e.key === 'Escape') closeWelcome(); return; }
+    if (e.key === 'Escape' && !drawer.hidden) { closeTable(); return; }
+    if (e.target.tagName === 'INPUT' || !drawer.hidden) return;
+    if (e.key === 'ArrowLeft') select(current + 1);
+    if (e.key === 'ArrowRight') select(current - 1);
+  });
+
+  // ---------- Camera fit ----------
+  let fit = null;
+  function fitCamera() {
+    const aspect = camera.aspect || 1;
+    let d = atom.outerR * 2.7 + 4;
+    if (aspect < 1) d /= Math.max(aspect, 0.5) * 1.05;
+    fit = { from: camera.position.length(), to: d, t0: performance.now() };
+  }
+  controls.addEventListener('start', () => { fit = null; });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', () => { resize(); if (atom) fitCamera(); });
+  resize();
+
+  // ---------- Loop ----------
+  const M = new THREE.Matrix4();
+  let last = performance.now(), t = 0;
+  const easeOutBack = (x) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; };
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const step = paused ? 0 : dt * speed;
+    t += step;
+
+    if (atom) {
+      const age = Math.min(1, (now - atom.born) / 900);
+      atom.group.scale.setScalar(Math.max(0.001, easeOutBack(age)));
+
+      // nucleon vibration
+      const amp = 0.035;
+      for (const q of atom.nucleons) {
+        const ph = q.ph + t * q.fr;
+        M.makeTranslation(q.base[0] + Math.sin(ph) * amp, q.base[1] + Math.cos(ph * 1.3) * amp, q.base[2] + Math.sin(ph * 0.7) * amp);
+        q.mesh.setMatrixAt(q.i, M);
+      }
+      atom.pMesh.instanceMatrix.needsUpdate = true;
+      if (atom.nMesh) atom.nMesh.instanceMatrix.needsUpdate = true;
+
+      atom.bohr.children.forEach((pivot) => { pivot.rotation.y += step * pivot.userData.prec * 4; });
+      for (const ring of atom.rings) {
+        const r = ring.r;
+        for (const e of ring.electrons) {
+          const th = e.off + t * ring.speed * ring.dir;
+          const x = Math.cos(th) * r, y = Math.sin(th) * r;
+          e.sprite.position.set(x, y, 0); e.core.position.set(x, y, 0);
+          const arr = e.trail.geometry.attributes.position.array;
+          for (let j = 0; j < TRAIL_PTS; j++) {
+            const a = th - ring.dir * (j / (TRAIL_PTS - 1)) * TRAIL_ARC;
+            arr[j * 3] = Math.cos(a) * r; arr[j * 3 + 1] = Math.sin(a) * r; arr[j * 3 + 2] = 0;
+          }
+          e.trail.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+    }
+
+    if (fit) {
+      const k = Math.min(1, (now - fit.t0) / 1200);
+      const e = 1 - Math.pow(1 - k, 3);
+      camera.position.setLength(fit.from + (fit.to - fit.from) * e);
+      if (k >= 1) fit = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Welcome popup + guided tour ----------
+  const welcome = $('welcome'), tour = $('tour'), spot = $('spot'), cursor = $('cursor'), card = $('tourCard');
+  let tourTok = 0, tourPaused = false, tourIdx = 0, beforeTour = current;
+
+  function closeWelcome() {
+    welcome.hidden = true;
+    try { if ($('dontShow').checked) localStorage.setItem('atomlab-skip-welcome', '1'); } catch (e) {}
+  }
+  $('skipTour').addEventListener('click', closeWelcome);
+  $('startTour').addEventListener('click', () => { closeWelcome(); startTour(); });
+  $('help').addEventListener('click', startTour);
+  try { if (localStorage.getItem('atomlab-skip-welcome') === '1') welcome.hidden = true; } catch (e) {}
+
+  // Timer that stops while the tour is paused and ends early when the step changes
+  function wait(ms, tok, onTick) {
+    return new Promise((res) => {
+      let t0 = 0;
+      const id = setInterval(() => {
+        if (tok !== tourTok) { clearInterval(id); res(false); return; }
+        if (!tourPaused) t0 += 50;
+        if (onTick) onTick(Math.min(1, t0 / ms));
+        if (t0 >= ms) { clearInterval(id); res(true); }
+      }, 50);
+    });
+  }
+  const visible = (el) => el && el.offsetParent !== null && el.getClientRects().length > 0;
+  function rectOf(target) {
+    if (target === 'atom') {
+      const w = innerWidth, h = innerHeight, s = Math.min(w, h) * 0.5;
+      return { left: w / 2 - s / 2, top: h / 2 - s / 2, width: s, height: s, round: true };
+    }
+    const r = target.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
+  function placeSpot(target) {
+    const r = rectOf(target), pad = 6;
+    Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px', borderRadius: r.round ? '50%' : '10px' });
+    const cy = r.top + r.height / 2;
+    card.classList.toggle('at-top', cy > innerHeight * 0.55);
+    card.classList.toggle('at-bottom', cy <= innerHeight * 0.55);
+  }
+  function moveCursor(x, y, ms = 800) {
+    cursor.style.transitionDuration = ms + 'ms';
+    cursor.style.transform = `translate(${x - 4}px, ${y - 2}px)`;
+  }
+  const centerOf = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  async function clickOn(el, tok) {
+    const [x, y] = centerOf(el);
+    moveCursor(x, y);
+    if (!(await wait(900, tok))) return false;
+    cursor.classList.remove('click'); void cursor.offsetWidth; cursor.classList.add('click');
+    el.click();
+    return wait(500, tok);
+  }
+  function ensureElement(z) { if (ELEMENTS[current].z !== z) select(z - 1); }
+  function ensureDrawer(open) { if (open && drawer.hidden) openTable(); if (!open && !drawer.hidden) closeTable(); }
+  function clearHighlight() { if (highlight) legend.querySelector(`.lg[data-key="${highlight}"]`).click(); }
+
+  const STEPS = [
+    { title: 'هذي هي الذرّة', text: 'في الوسط النواة: الكرات الحمراء بروتونات والزرقاء نيوترونات. والنقاط الملوّنة حولها إلكترونات تدور في مستويات الطاقة.',
+      setup() { ensureDrawer(false); ensureElement(26); }, target: () => 'atom' },
+    { title: 'دوّري الذرّة وكبّريها', text: 'اسحبي على الشاشة بالفأرة أو بإصبعك عشان تدوّرين الذرّة، ومرّري عجلة الفأرة أو باعدي إصبعيك عشان تكبّرين.',
+      setup() { ensureDrawer(false); }, target: () => 'atom',
+      async act(tok) {
+        const w = innerWidth, h = innerHeight;
+        moveCursor(w / 2 - Math.min(w, h) * 0.18, h / 2);
+        if (!(await wait(900, tok))) return;
+        moveCursor(w / 2 + Math.min(w, h) * 0.18, h / 2, 1600);
+        fit = null;
+        const axis = new THREE.Vector3(0, 1, 0);
+        let last = 0;
+        await wait(1600, tok, (p) => { camera.position.applyAxisAngle(axis, -(p - last) * Math.PI * 0.8); last = p; });
+      } },
+    { title: 'بطاقة العنصر', text: 'هنا كل معلومات العنصر: اسمه ورمزه، وهل هو فلز أو لا فلز أو شبه فلز، ونوعه، وحالته في درجة حرارة الغرفة: صلب أو سائل أو غاز.',
+      setup() { ensureDrawer(false); }, target: () => document.querySelector('.panel') },
+    { title: 'مستويات الطاقة', text: 'كل رقم هو عدد الإلكترونات في مستوى طاقة، وبنفس لون مداره في الذرّة. وتحته التوزيع الإلكتروني ومعلومة «هل تعلم؟».',
+      setup() { ensureDrawer(false); }, target: () => (visible(document.querySelector('.shell-block')) ? document.querySelector('.shell-block') : document.querySelector('.panel')) },
+    { title: 'العنصر التالي', text: 'اضغطي «التالي» عشان تنتقلين للعنصر اللي بعده في الجدول الدوري.',
+      setup() { ensureDrawer(false); ensureElement(26); }, target: () => $('next'), act: (tok) => clickOn($('next'), tok) },
+    { title: 'العنصر السابق', text: 'و«السابق» يرجّعك للعنصر اللي قبله.',
+      setup() { ensureDrawer(false); ensureElement(27); }, target: () => $('prev'), act: (tok) => clickOn($('prev'), tok) },
+    { title: 'افتحي الجدول الدوري', text: 'من زر «الجدول الدوري» يطلع لك الجدول كامل بالـ118 عنصراً.',
+      setup() { ensureDrawer(false); clearHighlight(); }, target: () => $('openTable'),
+      async act(tok) { await clickOn($('openTable'), tok); if (tok === tourTok) placeSpot($('pt')); } },
+    { title: 'أنواع العناصر', text: 'لون الخانة يبيّن نوع العنصر. اضغطي على أي نوع، مثل «هالوجين»، عشان تتظلّل عناصره. ولون الرمز يبيّن الحالة: أسود صلب، أزرق سائل، أحمر غاز.',
+      setup() { ensureDrawer(true); clearHighlight(); }, target: () => legend,
+      async act(tok) { await clickOn(legend.querySelector('.lg[data-key="halogen"]'), tok); if (tok === tourTok) placeSpot($('pt')); } },
+    { title: 'اختاري أي عنصر', text: 'اضغطي على أي عنصر في الجدول، مثل الأكسجين، وتطلع لك ذرّته على طول.',
+      setup() { ensureDrawer(true); clearHighlight(); },
+      target: () => { cells[7].scrollIntoView({ block: 'nearest', inline: 'center' }); return cells[7]; },
+      async act(tok) { await clickOn(cells[7], tok); if (tok === tourTok) placeSpot('atom'); } },
+    { title: 'تحكّمي بالحركة', text: 'من هنا تبطّئين حركة الإلكترونات أو تسرّعينها، أو توقفينها عشان تعدّينها بسهولة.',
+      setup() { ensureDrawer(false); clearHighlight(); }, target: () => document.querySelector('.ctl') },
+    { title: 'ارجعي للشرح أي وقت', text: 'إذا احتجتِ هذا الشرح مرة ثانية اضغطي «طريقة الاستخدام». استمتعي بالاستكشاف!',
+      setup() { ensureDrawer(false); }, target: () => $('help'), last: true },
+  ];
+  $('tourDots').innerHTML = STEPS.map(() => '<i></i>').join('');
+
+  async function runStep(i) {
+    const tok = ++tourTok;
+    tourIdx = i;
+    const s = STEPS[i];
+    s.setup && s.setup();
+    $('tourStep').textContent = `الخطوة ${i + 1} من ${STEPS.length}`;
+    $('tourTitle').textContent = s.title;
+    $('tourText').textContent = s.text;
+    $('tourBar').style.width = '0%';
+    [...$('tourDots').children].forEach((d, k) => d.classList.toggle('on', k <= i));
+    $('tourPrev').disabled = i === 0;
+    $('tourNext').textContent = s.last ? 'ابدئي الاستكشاف' : 'التالي ←';
+    if (!(await wait(120, tok))) return;
+    const target = s.target();
+    placeSpot(target);
+    if (!s.act) { const r = rectOf(target); moveCursor(r.left + r.width / 2, r.top + r.height / 2); }
+    if (s.act) { await s.act(tok); if (tok !== tourTok) return; }
+    const done = await wait(Math.max(4200, s.text.length * 55), tok, (p) => { $('tourBar').style.width = p * 100 + '%'; });
+    if (done && tok === tourTok && !s.last) runStep(i + 1);
+  }
+  function startTour() {
+    if (!welcome.hidden) welcome.hidden = true;
+    beforeTour = current;
+    tourPaused = false; $('tourPause').textContent = '❚❚ إيقاف';
+    tour.hidden = false;
+    moveCursor(innerWidth / 2, innerHeight - 40, 0);
+    runStep(0);
+  }
+  function endTour() {
+    tourTok++;
+    tour.hidden = true;
+    clearHighlight(); ensureDrawer(false);
+    select(beforeTour);
+  }
+  $('tourNext').addEventListener('click', () => (STEPS[tourIdx].last ? endTour() : runStep(tourIdx + 1)));
+  $('tourPrev').addEventListener('click', () => tourIdx > 0 && runStep(tourIdx - 1));
+  $('tourEnd').addEventListener('click', endTour);
+  $('tourPause').addEventListener('click', () => {
+    tourPaused = !tourPaused;
+    $('tourPause').textContent = tourPaused ? '▶ تشغيل' : '❚❚ إيقاف';
+  });
+  window.addEventListener('resize', () => { if (!tour.hidden) placeSpot(STEPS[tourIdx].target()); });
+
+  // Open the element named in the link's #anchor (e.g. #Fe, #U)
+  function fromHash() {
+    const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    return ELEMENTS.findIndex((el) => el.s.toLowerCase() === h);
+  }
+  window.addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0) select(i); });
+  const initial = fromHash();
+  if (initial >= 0) current = initial;
+
+  select(current);
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
