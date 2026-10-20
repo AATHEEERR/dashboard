@@ -1,37 +1,29 @@
 <title>مختبر الذرّة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <style>
-/* Layout: full-bleed WebGL stage; instrument panel docked at the reading start (right), periodic strip along the bottom. */
+/* Layout: full-bleed WebGL stage on a light lab ground; title block and controls at top-left, instrument panel at top-right, periodic strip along the bottom. */
 :root {
-  --ink: #050816;        /* deep chamber background */
-  --ink-2: #0c1230;      /* vignette core */
-  --fg: #e6ecff;
-  --muted: #8d97bf;
-  --line: rgba(160, 178, 255, 0.16);
-  --surface: rgba(10, 15, 38, 0.72);
-  --proton: #ff4d6d;
-  --neutron: #4da3ff;
-  --electron: #8fefff;
-  --sh1: #3ee0ff; --sh2: #6bff8e; --sh3: #ffe14d; --sh4: #ff9a3d; --sh5: #ff4fa3; --sh6: #b57dff; --sh7: #5d8bff;
-  --orb-s: #7fe7ff;
-  --orb-p: #a68bff;
-  --orb-d: #ff7aa8;
-  --orb-f: #ffc66b;
-  --display: "Reem Kufi", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --bg: #f4f6fb;
+  --bg-hi: #ffffff;
+  --fg: #14213d;
+  --muted: #5b6785;
+  --line: rgba(20, 33, 61, 0.13);
+  --surface: rgba(255, 255, 255, 0.88);
+  --proton: #e11d48;
+  --neutron: #2563eb;
+  --accent: #14213d;
+  --sh1: #0891b2; --sh2: #16a34a; --sh3: #d97706; --sh4: #ea580c; --sh5: #db2777; --sh6: #7c3aed; --sh7: #2563eb;
+  --serif: "Amiri", "Noto Naskh Arabic", "Times New Roman", serif;
   --body: "IBM Plex Sans Arabic", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  color-scheme: dark;
+  color-scheme: light;
 }
 html, body { height: 100%; }
 body {
-  background:
-    radial-gradient(60% 50% at 12% 18%, rgba(124, 58, 237, 0.35), transparent 70%),
-    radial-gradient(55% 45% at 88% 85%, rgba(14, 165, 233, 0.28), transparent 70%),
-    radial-gradient(45% 40% at 85% 10%, rgba(236, 72, 153, 0.22), transparent 70%),
-    radial-gradient(120% 90% at 50% 45%, var(--ink-2) 0%, var(--ink) 60%);
-  background-color: var(--ink);
+  background: radial-gradient(85% 70% at 50% 42%, var(--bg-hi) 0%, var(--bg) 70%);
+  background-color: var(--bg);
   color: var(--fg);
   font-family: var(--body);
   overflow: hidden;
@@ -50,40 +42,42 @@ body {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: grid;
   gap: 14px;
 }
-.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); display: flex; justify-content: space-between; }
 .ident { display: flex; align-items: center; gap: 16px; }
 .sym {
-  font-family: var(--mono); font-weight: 600; font-size: 56px; line-height: 1;
+  font-family: var(--mono); font-weight: 600; font-size: 54px; line-height: 1;
   color: var(--fg); direction: ltr;
   min-width: 2.4ch; text-align: center;
-  padding: 8px 6px; border: 1px solid var(--line); border-radius: 4px;
+  padding: 10px 6px 6px; background: var(--bg-hi);
+  border: 1px solid var(--line); border-top: 4px solid var(--c, var(--line)); border-radius: 4px;
   position: relative;
 }
-.sym { border-color: var(--c, var(--line)); box-shadow: 0 0 22px color-mix(in srgb, var(--c, transparent) 40%, transparent); }
 .sym::after { content: attr(data-z); position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: 400; color: var(--muted); }
-.name { font-family: var(--display); font-size: 28px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.name { font-family: var(--serif); font-size: 32px; font-weight: 700; line-height: 1.1; text-wrap: balance; }
 .mass { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .mass span, .stats dd { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.cat { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: #fff; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
 .stats div { border-top: 1px solid var(--line); padding-top: 8px; }
 .stats dt { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 600; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
-.dot.p { background: var(--proton); box-shadow: 0 0 8px var(--proton); }
+.dot.p { background: var(--proton); }
 .dot.n { background: var(--neutron); }
-.dot.e { background: var(--electron); box-shadow: 0 0 8px var(--electron); }
+.dot.e { background: conic-gradient(var(--sh1), var(--sh2), var(--sh3), var(--sh5), var(--sh1)); }
 .block h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
 .mono { font-family: var(--mono); font-size: 14px; line-height: 1.6; word-break: break-word; }
-#shells { direction: ltr; text-align: right; font-size: 17px; letter-spacing: 0.04em; }
-#shells b { font-weight: 600; text-shadow: 0 0 10px currentColor; }
-#conf sup { font-size: 0.7em; color: var(--electron); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); }
+#shells { direction: ltr; text-align: right; font-size: 17px; letter-spacing: 0.04em; color: var(--muted); }
+#shells b { font-weight: 600; }
+#conf sup { font-size: 0.7em; color: var(--sh1); }
+.fact { font-size: 13.5px; line-height: 1.7; border-right: 3px solid var(--sh3); padding-right: 10px; }
+.fact h3 { color: var(--sh3); font-weight: 600; }
 
 .topbar {
   position: fixed;
@@ -91,24 +85,19 @@ body {
   left: calc(16px + env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
 }
-.brand span { background: linear-gradient(90deg, var(--sh1), var(--sh2), var(--sh3), var(--sh4), var(--sh5)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cat { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: var(--ink); }
-.fact { font-size: 13.5px; line-height: 1.7; border-right: 3px solid var(--sh3); padding-right: 10px; }
-.fact h3 { color: var(--sh3); }
-.brand { font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: 0.01em; display: flex; align-items: center; gap: 8px; }
+.brand { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .brand svg { flex: none; }
+.brand h1 { margin: 0; font-family: var(--serif); font-size: 28px; font-weight: 700; line-height: 1.1; color: var(--fg); }
+.brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: flex-end; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
 button {
   font: inherit; font-size: 13px; color: var(--fg); background: transparent;
   border: 0; padding: 8px 12px; cursor: pointer;
 }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); outline-offset: 2px; }
-.seg button[aria-pressed="true"] { background: rgba(143, 239, 255, 0.14); color: var(--electron); }
-.seg button + button { border-right: 1px solid var(--line); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outline-offset: 2px; }
 .ctl { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; font-size: 13px; color: var(--muted); }
-.ctl input[type="range"] { width: 96px; accent-color: var(--electron); }
-.ctl button { padding: 4px 4px; color: var(--fg); }
+.ctl input[type="range"] { width: 110px; accent-color: var(--accent); }
+.ctl button { padding: 4px 4px; }
 
 .strip {
   position: fixed;
@@ -116,21 +105,19 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   bottom: 0;
   padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin;
-  background: linear-gradient(to top, rgba(5, 8, 22, 0.92), rgba(5, 8, 22, 0));
+  background: linear-gradient(to top, rgba(244, 246, 251, 0.96), rgba(244, 246, 251, 0));
 }
 .cell {
   flex: none; width: 52px; height: 58px; padding: 4px 6px;
-  border: 1px solid var(--line); border-radius: 4px; background: var(--surface);
+  border: 1px solid var(--line); border-top: 3px solid var(--c, var(--line)); border-radius: 4px; background: var(--bg-hi);
   display: grid; grid-template-rows: auto 1fr; text-align: left; direction: ltr;
-  border-top: 3px solid var(--c, var(--line));
-  transition: border-color .2s, transform .2s;
+  transition: border-color .2s, transform .2s, background .2s;
 }
 .cell small { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-.cell strong { font-family: var(--mono); font-size: 20px; font-weight: 600; align-self: center; text-align: center; }
-.cell:hover { border-color: rgba(143, 239, 255, 0.5); transform: translateY(-2px); }
-.cell strong { color: var(--c, var(--fg)); }
-.cell[aria-current="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, rgba(10, 15, 38, 0.8)); box-shadow: 0 0 20px color-mix(in srgb, var(--c) 55%, transparent); transform: translateY(-3px); }
-.cell[aria-current="true"] strong { color: #fff; }
+.cell strong { font-family: var(--mono); font-size: 20px; font-weight: 600; align-self: center; text-align: center; color: var(--c, var(--fg)); }
+.cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(20, 33, 61, 0.1); }
+.cell[aria-current="true"] { background: var(--c); border-color: var(--c); transform: translateY(-3px); box-shadow: 0 6px 16px rgba(20, 33, 61, 0.18); }
+.cell[aria-current="true"] strong, .cell[aria-current="true"] small { color: #fff; }
 .hint {
   position: fixed; margin: 0;
   left: calc(16px + env(safe-area-inset-left, 0px));
@@ -146,9 +133,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     width: auto; padding: 12px 14px; gap: 10px;
     grid-template-columns: auto 1fr; align-items: center;
   }
-  .eyebrow, .conf-block, .legend, .fact { display: none; }
+  .eyebrow, .conf-block, .fact { display: none; }
   .sym { font-size: 34px; }
-  .name { font-size: 20px; }
+  .name { font-size: 22px; }
   .ident { grid-column: 1; }
   .stats { grid-column: 2; }
   .stats dd { font-size: 17px; }
@@ -158,19 +145,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   #shells { font-size: 14px; }
   .topbar { top: auto; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); align-items: stretch; }
   .brand { display: none; }
-  .controls { justify-content: space-between; }
+  .controls { justify-content: center; }
   .hint { display: none; }
-}
-@media (max-width: 420px) {
-  .ctl input[type="range"] { width: 70px; }
-  .seg button { padding: 8px 9px; }
 }
 </style>
 
 <div id="stage" aria-label="نموذج ذرّة ثلاثي الأبعاد قابل للتدوير"></div>
 
 <aside class="panel" aria-live="polite">
-  <div class="eyebrow"><span>العدد الذري <span id="zLbl"></span></span><span id="modeLbl">نموذج بور</span></div>
+  <div class="eyebrow"><span>العدد الذري <span id="zLbl"></span></span><span>نموذج بور</span></div>
   <div class="ident">
     <div class="sym" id="sym" data-z=""></div>
     <div>
@@ -187,19 +170,17 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   <div class="block shell-block"><h3>مستويات الطاقة</h3><div id="shells" class="mono"></div></div>
   <div class="block conf-block"><h3>التوزيع الإلكتروني</h3><div id="conf" class="mono" dir="ltr"></div></div>
   <div class="block fact"><h3>هل تعلم؟</h3><div id="fact"></div></div>
-  <div class="legend" id="legend" hidden></div>
 </aside>
 
 <div class="topbar">
-  <div class="brand">
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#8fefff" stroke-width="1.3"><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></g><circle cx="12" cy="12" r="2.2" fill="#ff7a45"/></svg>
-    <span>مختبر الذرّة</span>
-  </div>
-  <div class="controls">
-    <div class="seg" role="group" aria-label="طريقة العرض">
-      <button id="mBohr" aria-pressed="true">نموذج بور</button>
-      <button id="mCloud" aria-pressed="false">السحابة الكمّية</button>
+  <header class="brand">
+    <div>
+      <h1>مختبر الذرّة</h1>
+      <p>نموذج تفاعلي لبنية الذرّة · الكيمياء</p>
     </div>
+    <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#14213d" stroke-width="1"><ellipse cx="12" cy="12" rx="10.5" ry="4"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(120 12 12)"/></g><circle cx="12" cy="12" r="1.9" fill="#14213d"/></svg>
+  </header>
+  <div class="controls">
     <div class="ctl">
       <label for="speed">السرعة</label>
       <input type="range" id="speed" min="0" max="3" step="0.05" value="1">
@@ -217,15 +198,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
 (() => {
   // ---------- Data ----------
   const CATS = {
-    nonmetal: { name: 'لا فلز', c: '#6bff8e' },
-    noble: { name: 'غاز نبيل', c: '#b57dff' },
-    alkali: { name: 'فلز قلوي', c: '#ff5a5a' },
-    alkaline: { name: 'فلز قلوي ترابي', c: '#ff9a3d' },
-    metalloid: { name: 'شبه فلز', c: '#2ee6c8' },
-    post: { name: 'فلز بعد انتقالي', c: '#8fb4ff' },
-    halogen: { name: 'هالوجين', c: '#ffe14d' },
-    transition: { name: 'فلز انتقالي', c: '#ff6fb5' },
-    actinide: { name: 'أكتينيد', c: '#c6ff4d' },
+    nonmetal: { name: 'لا فلز', c: '#16a34a' },
+    noble: { name: 'غاز نبيل', c: '#7c3aed' },
+    alkali: { name: 'فلز قلوي', c: '#dc2626' },
+    alkaline: { name: 'فلز قلوي ترابي', c: '#ea580c' },
+    metalloid: { name: 'شبه فلز', c: '#0d9488' },
+    post: { name: 'فلز بعد انتقالي', c: '#475569' },
+    halogen: { name: 'هالوجين', c: '#ca8a04' },
+    transition: { name: 'فلز انتقالي', c: '#db2777' },
+    actinide: { name: 'أكتينيد', c: '#65a30d' },
   };
   const ELEMENTS = [
     { z: 1, s: 'H', n: 'هيدروجين', N: 0, cat: 'nonmetal', f: 'أخف العناصر وأكثرها انتشاراً في الكون، ويكوّن نحو 75% من كتلة المادة العادية فيه.' },
@@ -267,14 +248,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
       .map(([o, k]) => ({ o, n: +o[0], l: L.indexOf(o[1]), k }))
       .sort((a, b) => a.n - b.n || a.l - b.l);
   }
-  const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-  const sup = (k) => String(k).split('').map((d) => SUP[d]).join('');
 
   // ---------- Scene ----------
   const stage = document.getElementById('stage');
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x050816, 0);
+  renderer.setClearColor(0xffffff, 0);
   stage.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -290,9 +269,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.5;
 
-  scene.add(new THREE.AmbientLight(0x4a5a8a, 0.7));
-  const key = new THREE.DirectionalLight(0xe4ecff, 1.15); key.position.set(5, 8, 6); scene.add(key);
-  const rim = new THREE.DirectionalLight(0x7b6cff, 0.8); rim.position.set(-6, -3, -6); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(5, 8, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xc7d2fe, 0.45); rim.position.set(-6, -3, -6); scene.add(rim);
 
   function radialTexture(stops) {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -302,24 +281,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(c);
   }
-  const GLOW = radialTexture([[0, 1], [0.15, 0.85], [0.4, 0.22], [1, 0]]);
-  const DOT = radialTexture([[0, 1], [0.35, 0.7], [1, 0]]);
-
-  // Faint particle-chamber dust
-  {
-    const n = 1600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-    const hues = [0x9fb4ff, 0xffffff, 0xff9ad5, 0x8fefff, 0xffe9a0, 0xc4a5ff];
-    const c = new THREE.Color();
-    for (let i = 0; i < n; i++) {
-      const v = randomUnit(), r = 160 + Math.random() * 200;
-      pos.set([v.x * r, v.y * r, v.z * r], i * 3);
-      c.setHex(hues[i % hues.length]); col.set([c.r, c.g, c.b], i * 3);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.7 })));
-  }
+  const GLOW = radialTexture([[0, 1], [0.3, 0.55], [1, 0]]);
 
   function randomUnit() {
     const u = Math.random() * 2 - 1, t = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
@@ -358,11 +320,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
 
   // ---------- Atom build ----------
   const SPHERE = new THREE.SphereGeometry(RS, 24, 16);
-  const CORE = new THREE.SphereGeometry(0.11, 12, 8);
+  const CORE = new THREE.SphereGeometry(0.16, 16, 12);
   const TRAIL_PTS = 30, TRAIL_ARC = 1.1;
-  const ORB_COLORS = [0x7fe7ff, 0xa68bff, 0xff7aa8, 0xffc66b];
-  const SHELL_COLORS = [0x3ee0ff, 0x6bff8e, 0xffe14d, 0xff9a3d, 0xff4fa3, 0xb57dff, 0x5d8bff];
+  const SHELL_COLORS = [0x0891b2, 0x16a34a, 0xd97706, 0xea580c, 0xdb2777, 0x7c3aed, 0x2563eb];
   const SHELL_CSS = ['--sh1', '--sh2', '--sh3', '--sh4', '--sh5', '--sh6', '--sh7'];
+  const GROUND = new THREE.Color(0xf4f6fb); // trails fade into the page background
   let atom = null;
 
   function disposeTree(obj) {
@@ -382,8 +344,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     // Nucleus as instanced spheres
     const pts = packNucleus(A);
     const order = pts.map((_, i) => i).sort(() => Math.random() - 0.5);
-    const pMesh = new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0xff4d6d, emissive: 0x6a0a1e, roughness: 0.3, metalness: 0.08 }), el.z);
-    const nMesh = el.N ? new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0x4da3ff, emissive: 0x08204a, roughness: 0.38, metalness: 0.12 }), el.N) : null;
+    const pMesh = new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0xe11d48, emissive: 0x3a0412, roughness: 0.35, metalness: 0.05 }), el.z);
+    const nMesh = el.N ? new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0x2563eb, emissive: 0x06143a, roughness: 0.4, metalness: 0.05 }), el.N) : null;
     const nucleons = order.map((idx, k) => ({
       base: pts[idx], mesh: k < el.z ? pMesh : nMesh, i: k < el.z ? k : k - el.z,
       ph: Math.random() * Math.PI * 2, fr: 6 + Math.random() * 5,
@@ -392,8 +354,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     for (const q of pts) rc = Math.max(rc, Math.hypot(q[0], q[1], q[2]) + RS);
     const nucleus = new THREE.Group();
     nucleus.add(pMesh); if (nMesh) nucleus.add(nMesh);
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xff5a8a, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
-    halo.scale.setScalar(rc * 4.2 + 1.5);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xfb7185, transparent: true, opacity: 0.18, depthWrite: false }));
+    halo.scale.setScalar(rc * 4 + 1.5);
     nucleus.add(halo);
     group.add(nucleus);
 
@@ -411,6 +373,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
       const ringCount = Math.ceil(cnt / 8);
       const pivot = new THREE.Group();
       pivot.rotation.set(si * 0.9 + 0.4, si * 2.39996, 0);
+      pivot.userData.prec = 0.05 + 0.03 * si;
       bohr.add(pivot);
       for (let ri = 0; ri < ringCount; ri++) {
         const n = Math.floor(cnt / ringCount) + (ri < cnt % ringCount ? 1 : 0);
@@ -421,96 +384,42 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
         const circ = [];
         for (let a = 0; a <= 128; a++) { const t = a / 128 * Math.PI * 2; circ.push(new THREE.Vector3(Math.cos(t) * r, Math.sin(t) * r, 0)); }
         tilt.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circ),
-          new THREE.LineBasicMaterial({ color: sc, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false })));
+          new THREE.LineBasicMaterial({ color: sc, transparent: true, opacity: 0.35, depthWrite: false })));
 
         const electrons = [];
         for (let k = 0; k < n; k++) {
-          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: sc, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-          sprite.scale.setScalar(1.15);
-          const core = new THREE.Mesh(CORE, new THREE.MeshBasicMaterial({ color: 0xf2feff }));
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: sc, transparent: true, opacity: 0.35, depthWrite: false }));
+          sprite.scale.setScalar(0.9);
+          const core = new THREE.Mesh(CORE, new THREE.MeshBasicMaterial({ color: sc }));
           const tg = new THREE.BufferGeometry();
           tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_PTS * 3), 3));
-          const col = new Float32Array(TRAIL_PTS * 3);
+          const col = new Float32Array(TRAIL_PTS * 3), c = new THREE.Color();
           for (let j = 0; j < TRAIL_PTS; j++) {
-            const f = Math.pow(1 - j / (TRAIL_PTS - 1), 1.6);
-            col.set([sc.r * f, sc.g * f, sc.b * f], j * 3);
+            c.copy(sc).lerp(GROUND, Math.pow(j / (TRAIL_PTS - 1), 0.7));
+            col.set([c.r, c.g, c.b], j * 3);
           }
           tg.setAttribute('color', new THREE.BufferAttribute(col, 3));
-          const trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+          const trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ vertexColors: true }));
           tilt.add(trail, sprite, core);
           electrons.push({ sprite, core, trail, off: (k / n) * Math.PI * 2 + ri * 0.6 });
         }
         rings.push({
-          tilt, r, electrons,
+          r, electrons,
           speed: 1.25 / Math.pow(si + 1, 0.75),
           dir: (si + ri) % 2 ? -1 : 1,
         });
       }
-      pivot.userData.prec = 0.05 + 0.03 * si;
       r += 1.6;
     });
     const outerR = radii[radii.length - 1];
 
-    atom = { el, conf, group, nucleus, nucleons, pMesh, nMesh, halo, bohr, rings, radii, outerR, rc, cloud: null, born: performance.now() };
-    if (mode === 'cloud') ensureCloud();
-    applyMode();
+    atom = { el, conf, group, nucleons, pMesh, nMesh, bohr, rings, outerR, born: performance.now() };
     updatePanel();
     fitCamera();
   }
 
-  // ---------- Quantum cloud ----------
-  const ANG = [
-    [() => 1],
-    [(x) => x, (x, y) => y, (x, y, z) => z],
-    [(x, y, z) => 3 * z * z - 1, (x, y, z) => x * z, (x, y, z) => y * z, (x, y) => x * y, (x, y) => x * x - y * y],
-    [(x, y, z) => z * (5 * z * z - 3), (x, y, z) => x * (5 * z * z - 1), (x, y, z) => y * (5 * z * z - 1),
-     (x, y, z) => z * (x * x - y * y), (x, y, z) => x * y * z, (x, y) => x * (x * x - 3 * y * y), (x, y) => y * (3 * x * x - y * y)],
-  ];
-  const ANG_MAX = ANG.map((fs) => fs.map((f) => {
-    let m = 0;
-    for (let i = 0; i < 6000; i++) { const v = randomUnit(); m = Math.max(m, f(v.x, v.y, v.z) ** 2); }
-    return m;
-  }));
-
-  function ensureCloud() {
-    if (atom.cloud) return;
-    const PER_E = 1100, CAP_PTS = 52000;
-    const scale = Math.min(1, CAP_PTS / (atom.el.z * PER_E));
-    const pos = [], col = [];
-    const c = new THREE.Color();
-    for (const sub of atom.conf) {
-      const m = 2 * sub.l + 1;
-      const R = atom.radii[sub.n - 1];
-      const shape = 4 * sub.n + 4, mean = shape; // gamma(k, 1): mean k, spread 1/sqrt(k)
-      c.setHex(ORB_COLORS[sub.l]);
-      for (let mi = 0; mi < m; mi++) {
-        const occ = (sub.k > mi ? 1 : 0) + (sub.k > m + mi ? 1 : 0);
-        const count = Math.round(occ * PER_E * scale);
-        const f = ANG[sub.l][mi], fmax = ANG_MAX[sub.l][mi];
-        for (let p = 0; p < count; p++) {
-          let v;
-          do { v = randomUnit(); } while (Math.random() * fmax > f(v.x, v.y, v.z) ** 2);
-          let g = 0; for (let s = 0; s < shape; s++) g -= Math.log(Math.random() || 1e-9);
-          const rr = R * g / mean;
-          pos.push(v.x * rr, v.y * rr, v.z * rr);
-          const b = 0.55 + Math.random() * 0.45;
-          col.push(c.r * b, c.g * b, c.b * b);
-        }
-      }
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    const pts = new THREE.Points(g, new THREE.PointsMaterial({
-      size: 0.1 + atom.outerR * 0.016, map: DOT, vertexColors: true, transparent: true, opacity: 0.85,
-      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
-    }));
-    atom.cloud = pts;
-    atom.group.add(pts);
-  }
-
   // ---------- UI ----------
-  let mode = 'bohr', paused = false, speed = 1, current = 14;
+  let paused = false, speed = 1, current = 14;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced) { speed = 0.3; controls.autoRotate = false; }
   const $ = (id) => document.getElementById(id);
@@ -549,24 +458,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     conf.forEach((c) => { shells[c.n - 1] = (shells[c.n - 1] || 0) + c.k; });
     $('shells').innerHTML = shells.map((s, i) => `<b style="color:var(${SHELL_CSS[i]})">${s}</b>`).join(' · ');
     $('conf').innerHTML = conf.map((c) => `${c.n}${L[c.l]}<sup>${c.k}</sup>`).join(' ');
-    const present = [...new Set(conf.map((c) => c.l))];
-    const css = ['--orb-s', '--orb-p', '--orb-d', '--orb-f'];
-    $('legend').innerHTML = present.map((l) => `<span><i class="dot" style="background:var(${css[l]});box-shadow:0 0 8px var(${css[l]})"></i>${L[l]}</span>`).join('') +
-      '<span style="font-family:var(--body)">كثافة الاحتمال حسب نوع المدار</span>';
   }
 
-  function applyMode() {
-    $('mBohr').setAttribute('aria-pressed', mode === 'bohr');
-    $('mCloud').setAttribute('aria-pressed', mode === 'cloud');
-    $('modeLbl').textContent = mode === 'bohr' ? 'نموذج بور' : 'السحابة الكمّية';
-    $('legend').hidden = mode !== 'cloud';
-    if (!atom) return;
-    atom.bohr.visible = mode === 'bohr';
-    if (atom.cloud) atom.cloud.visible = mode === 'cloud';
-    atom.nucleus.scale.setScalar(mode === 'cloud' ? 0.7 : 1);
-  }
-  $('mBohr').addEventListener('click', () => { mode = 'bohr'; applyMode(); });
-  $('mCloud').addEventListener('click', () => { mode = 'cloud'; ensureCloud(); applyMode(); });
   $('speed').addEventListener('input', (e) => { speed = +e.target.value; });
   $('pause').addEventListener('click', () => {
     paused = !paused;
@@ -599,7 +492,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   resize();
 
   // ---------- Loop ----------
-  const M = new THREE.Matrix4(), V = new THREE.Vector3();
+  const M = new THREE.Matrix4();
   let last = performance.now(), t = 0;
   const easeOutBack = (x) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; };
 
@@ -616,34 +509,26 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
       const amp = 0.035;
       for (const q of atom.nucleons) {
         const ph = q.ph + t * q.fr;
-        V.set(q.base[0] + Math.sin(ph) * amp, q.base[1] + Math.cos(ph * 1.3) * amp, q.base[2] + Math.sin(ph * 0.7) * amp);
-        M.makeTranslation(V.x, V.y, V.z);
+        M.makeTranslation(q.base[0] + Math.sin(ph) * amp, q.base[1] + Math.cos(ph * 1.3) * amp, q.base[2] + Math.sin(ph * 0.7) * amp);
         q.mesh.setMatrixAt(q.i, M);
       }
       atom.pMesh.instanceMatrix.needsUpdate = true;
       if (atom.nMesh) atom.nMesh.instanceMatrix.needsUpdate = true;
-      atom.halo.material.opacity = 0.45 + Math.sin(now / 700) * 0.08;
 
-      if (atom.bohr.visible) {
-        atom.bohr.children.forEach((pivot) => { pivot.rotation.y += step * pivot.userData.prec * 4; });
-        for (const ring of atom.rings) {
-          const r = ring.r;
-          for (const e of ring.electrons) {
-            const th = e.off + t * ring.speed * ring.dir;
-            const x = Math.cos(th) * r, y = Math.sin(th) * r;
-            e.sprite.position.set(x, y, 0); e.core.position.set(x, y, 0);
-            const arr = e.trail.geometry.attributes.position.array;
-            for (let j = 0; j < TRAIL_PTS; j++) {
-              const a = th - ring.dir * (j / (TRAIL_PTS - 1)) * TRAIL_ARC;
-              arr[j * 3] = Math.cos(a) * r; arr[j * 3 + 1] = Math.sin(a) * r; arr[j * 3 + 2] = 0;
-            }
-            e.trail.geometry.attributes.position.needsUpdate = true;
+      atom.bohr.children.forEach((pivot) => { pivot.rotation.y += step * pivot.userData.prec * 4; });
+      for (const ring of atom.rings) {
+        const r = ring.r;
+        for (const e of ring.electrons) {
+          const th = e.off + t * ring.speed * ring.dir;
+          const x = Math.cos(th) * r, y = Math.sin(th) * r;
+          e.sprite.position.set(x, y, 0); e.core.position.set(x, y, 0);
+          const arr = e.trail.geometry.attributes.position.array;
+          for (let j = 0; j < TRAIL_PTS; j++) {
+            const a = th - ring.dir * (j / (TRAIL_PTS - 1)) * TRAIL_ARC;
+            arr[j * 3] = Math.cos(a) * r; arr[j * 3 + 1] = Math.sin(a) * r; arr[j * 3 + 2] = 0;
           }
+          e.trail.geometry.attributes.position.needsUpdate = true;
         }
-      }
-      if (atom.cloud && atom.cloud.visible) {
-        atom.cloud.rotation.y += step * 0.15;
-        atom.cloud.rotation.x = Math.sin(t * 0.2) * 0.15;
       }
     }
 
@@ -661,8 +546,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   // Open the element named in the link's #anchor (e.g. #Fe, #U)
   function fromHash() {
     const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
-    const i = ELEMENTS.findIndex((el) => el.s.toLowerCase() === h);
-    return i >= 0 ? i : -1;
+    return ELEMENTS.findIndex((el) => el.s.toLowerCase() === h);
   }
   window.addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0) select(i); });
   const initial = fromHash();
