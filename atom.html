@@ -11,9 +11,10 @@
   --muted: #8d97bf;
   --line: rgba(160, 178, 255, 0.16);
   --surface: rgba(10, 15, 38, 0.72);
-  --proton: #ff7a45;
-  --neutron: #9fb2d9;
+  --proton: #ff4d6d;
+  --neutron: #4da3ff;
   --electron: #8fefff;
+  --sh1: #3ee0ff; --sh2: #6bff8e; --sh3: #ffe14d; --sh4: #ff9a3d; --sh5: #ff4fa3; --sh6: #b57dff; --sh7: #5d8bff;
   --orb-s: #7fe7ff;
   --orb-p: #a68bff;
   --orb-d: #ff7aa8;
@@ -25,7 +26,11 @@
 }
 html, body { height: 100%; }
 body {
-  background: radial-gradient(120% 90% at 50% 45%, var(--ink-2) 0%, var(--ink) 60%);
+  background:
+    radial-gradient(60% 50% at 12% 18%, rgba(124, 58, 237, 0.35), transparent 70%),
+    radial-gradient(55% 45% at 88% 85%, rgba(14, 165, 233, 0.28), transparent 70%),
+    radial-gradient(45% 40% at 85% 10%, rgba(236, 72, 153, 0.22), transparent 70%),
+    radial-gradient(120% 90% at 50% 45%, var(--ink-2) 0%, var(--ink) 60%);
   background-color: var(--ink);
   color: var(--fg);
   font-family: var(--body);
@@ -59,6 +64,7 @@ body {
   padding: 8px 6px; border: 1px solid var(--line); border-radius: 4px;
   position: relative;
 }
+.sym { border-color: var(--c, var(--line)); box-shadow: 0 0 22px color-mix(in srgb, var(--c, transparent) 40%, transparent); }
 .sym::after { content: attr(data-z); position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: 400; color: var(--muted); }
 .name { font-family: var(--display); font-size: 28px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
 .mass { font-size: 13px; color: var(--muted); margin-top: 4px; }
@@ -74,7 +80,7 @@ body {
 .block h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
 .mono { font-family: var(--mono); font-size: 14px; line-height: 1.6; word-break: break-word; }
 #shells { direction: ltr; text-align: right; font-size: 17px; letter-spacing: 0.04em; }
-#shells b { color: var(--electron); font-weight: 600; }
+#shells b { font-weight: 600; text-shadow: 0 0 10px currentColor; }
 #conf sup { font-size: 0.7em; color: var(--electron); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); }
@@ -85,6 +91,10 @@ body {
   left: calc(16px + env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
 }
+.brand span { background: linear-gradient(90deg, var(--sh1), var(--sh2), var(--sh3), var(--sh4), var(--sh5)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cat { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: var(--ink); }
+.fact { font-size: 13.5px; line-height: 1.7; border-right: 3px solid var(--sh3); padding-right: 10px; }
+.fact h3 { color: var(--sh3); }
 .brand { font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: 0.01em; display: flex; align-items: center; gap: 8px; }
 .brand svg { flex: none; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: flex-end; }
@@ -112,13 +122,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   flex: none; width: 52px; height: 58px; padding: 4px 6px;
   border: 1px solid var(--line); border-radius: 4px; background: var(--surface);
   display: grid; grid-template-rows: auto 1fr; text-align: left; direction: ltr;
+  border-top: 3px solid var(--c, var(--line));
   transition: border-color .2s, transform .2s;
 }
 .cell small { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 .cell strong { font-family: var(--mono); font-size: 20px; font-weight: 600; align-self: center; text-align: center; }
 .cell:hover { border-color: rgba(143, 239, 255, 0.5); transform: translateY(-2px); }
-.cell[aria-current="true"] { border-color: var(--proton); box-shadow: 0 0 0 1px var(--proton) inset, 0 0 18px rgba(255, 122, 69, 0.35); }
-.cell[aria-current="true"] strong { color: var(--proton); }
+.cell strong { color: var(--c, var(--fg)); }
+.cell[aria-current="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, rgba(10, 15, 38, 0.8)); box-shadow: 0 0 20px color-mix(in srgb, var(--c) 55%, transparent); transform: translateY(-3px); }
+.cell[aria-current="true"] strong { color: #fff; }
 .hint {
   position: fixed; margin: 0;
   left: calc(16px + env(safe-area-inset-left, 0px));
@@ -134,7 +146,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     width: auto; padding: 12px 14px; gap: 10px;
     grid-template-columns: auto 1fr; align-items: center;
   }
-  .eyebrow, .conf-block, .legend { display: none; }
+  .eyebrow, .conf-block, .legend, .fact { display: none; }
   .sym { font-size: 34px; }
   .name { font-size: 20px; }
   .ident { grid-column: 1; }
@@ -164,6 +176,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     <div>
       <div class="name" id="name"></div>
       <div class="mass">العدد الكتلي <span id="A"></span></div>
+      <div class="cat" id="cat"></div>
     </div>
   </div>
   <dl class="stats">
@@ -173,13 +186,14 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   </dl>
   <div class="block shell-block"><h3>مستويات الطاقة</h3><div id="shells" class="mono"></div></div>
   <div class="block conf-block"><h3>التوزيع الإلكتروني</h3><div id="conf" class="mono" dir="ltr"></div></div>
+  <div class="block fact"><h3>هل تعلم؟</h3><div id="fact"></div></div>
   <div class="legend" id="legend" hidden></div>
 </aside>
 
 <div class="topbar">
   <div class="brand">
     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#8fefff" stroke-width="1.3"><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></g><circle cx="12" cy="12" r="2.2" fill="#ff7a45"/></svg>
-    مختبر الذرّة
+    <span>مختبر الذرّة</span>
   </div>
   <div class="controls">
     <div class="seg" role="group" aria-label="طريقة العرض">
@@ -202,26 +216,37 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
 <script>
 (() => {
   // ---------- Data ----------
+  const CATS = {
+    nonmetal: { name: 'لا فلز', c: '#6bff8e' },
+    noble: { name: 'غاز نبيل', c: '#b57dff' },
+    alkali: { name: 'فلز قلوي', c: '#ff5a5a' },
+    alkaline: { name: 'فلز قلوي ترابي', c: '#ff9a3d' },
+    metalloid: { name: 'شبه فلز', c: '#2ee6c8' },
+    post: { name: 'فلز بعد انتقالي', c: '#8fb4ff' },
+    halogen: { name: 'هالوجين', c: '#ffe14d' },
+    transition: { name: 'فلز انتقالي', c: '#ff6fb5' },
+    actinide: { name: 'أكتينيد', c: '#c6ff4d' },
+  };
   const ELEMENTS = [
-    { z: 1, s: 'H', n: 'هيدروجين', N: 0 },
-    { z: 2, s: 'He', n: 'هيليوم', N: 2 },
-    { z: 3, s: 'Li', n: 'ليثيوم', N: 4 },
-    { z: 6, s: 'C', n: 'كربون', N: 6 },
-    { z: 7, s: 'N', n: 'نيتروجين', N: 7 },
-    { z: 8, s: 'O', n: 'أكسجين', N: 8 },
-    { z: 10, s: 'Ne', n: 'نيون', N: 10 },
-    { z: 11, s: 'Na', n: 'صوديوم', N: 12 },
-    { z: 12, s: 'Mg', n: 'مغنيسيوم', N: 12 },
-    { z: 13, s: 'Al', n: 'ألومنيوم', N: 14 },
-    { z: 14, s: 'Si', n: 'سيليكون', N: 14 },
-    { z: 17, s: 'Cl', n: 'كلور', N: 18 },
-    { z: 18, s: 'Ar', n: 'أرغون', N: 22 },
-    { z: 20, s: 'Ca', n: 'كالسيوم', N: 20 },
-    { z: 26, s: 'Fe', n: 'حديد', N: 30 },
-    { z: 29, s: 'Cu', n: 'نحاس', N: 35 },
-    { z: 47, s: 'Ag', n: 'فضة', N: 61 },
-    { z: 79, s: 'Au', n: 'ذهب', N: 118 },
-    { z: 92, s: 'U', n: 'يورانيوم', N: 146 },
+    { z: 1, s: 'H', n: 'هيدروجين', N: 0, cat: 'nonmetal', f: 'أخف العناصر وأكثرها انتشاراً في الكون، ويكوّن نحو 75% من كتلة المادة العادية فيه.' },
+    { z: 2, s: 'He', n: 'هيليوم', N: 2, cat: 'noble', f: 'لا يتجمد تحت الضغط العادي حتى قرب الصفر المطلق، ويُستخدم لتبريد مغناطيسات أجهزة الرنين المغناطيسي.' },
+    { z: 3, s: 'Li', n: 'ليثيوم', N: 4, cat: 'alkali', f: 'أخف الفلزات على الإطلاق، وهو أساس بطاريات الجوالات والسيارات الكهربائية.' },
+    { z: 6, s: 'C', n: 'كربون', N: 6, cat: 'nonmetal', f: 'أساس الكيمياء العضوية والحياة كلها، ومنه يتكوّن الألماس والجرافيت.' },
+    { z: 7, s: 'N', n: 'نيتروجين', N: 7, cat: 'nonmetal', f: 'يكوّن نحو 78% من الهواء الذي نتنفسه.' },
+    { z: 8, s: 'O', n: 'أكسجين', N: 8, cat: 'nonmetal', f: 'أكثر العناصر وفرة في القشرة الأرضية، ويكوّن نحو 21% من الهواء.' },
+    { z: 10, s: 'Ne', n: 'نيون', N: 10, cat: 'noble', f: 'يعطي الضوء الأحمر البرتقالي المعروف في لافتات النيون.' },
+    { z: 11, s: 'Na', n: 'صوديوم', N: 12, cat: 'alkali', f: 'فلز طري يُقطع بالسكين ويتفاعل بعنف مع الماء، وهو نصف ملح الطعام.' },
+    { z: 12, s: 'Mg', n: 'مغنيسيوم', N: 12, cat: 'alkaline', f: 'يحترق بضوء أبيض ساطع، ويوجد في مركز جزيء الكلوروفيل في النباتات.' },
+    { z: 13, s: 'Al', n: 'ألومنيوم', N: 14, cat: 'post', f: 'أكثر الفلزات وفرة في القشرة الأرضية، ومنه تُصنع علب المشروبات.' },
+    { z: 14, s: 'Si', n: 'سيليكون', N: 14, cat: 'metalloid', f: 'أساس رقائق الحاسوب والألواح الشمسية، ويوجد في رمل الصحراء.' },
+    { z: 17, s: 'Cl', n: 'كلور', N: 18, cat: 'halogen', f: 'غاز أصفر مخضر يُستخدم لتعقيم مياه الشرب، وهو النصف الآخر من ملح الطعام.' },
+    { z: 18, s: 'Ar', n: 'أرغون', N: 22, cat: 'noble', f: 'ثالث أكثر غاز في الهواء بنسبة تقارب 1%، ويُملأ به بعض المصابيح.' },
+    { z: 20, s: 'Ca', n: 'كالسيوم', N: 20, cat: 'alkaline', f: 'أساس العظام والأسنان، ويوجد بكثرة في الحجر الجيري.' },
+    { z: 26, s: 'Fe', n: 'حديد', N: 30, cat: 'transition', f: 'معظم لبّ الأرض من الحديد، وهو في الهيموغلوبين الذي ينقل الأكسجين في دمك.' },
+    { z: 29, s: 'Cu', n: 'نحاس', N: 35, cat: 'transition', f: 'من أفضل موصلات الكهرباء، ولذلك تُصنع منه معظم الأسلاك.' },
+    { z: 47, s: 'Ag', n: 'فضة', N: 61, cat: 'transition', f: 'أعلى العناصر توصيلاً للكهرباء والحرارة.' },
+    { z: 79, s: 'Au', n: 'ذهب', N: 118, cat: 'transition', f: 'لا يصدأ ولا يتآكل، ويمكن سحب غرام واحد منه إلى سلك طوله أكثر من كيلومترين.' },
+    { z: 92, s: 'U', n: 'يورانيوم', N: 146, cat: 'actinide', f: 'أثقل عنصر يوجد في الطبيعة بكميات كبيرة، ويُستخدم وقوداً في محطات الطاقة النووية.' },
   ];
   // Real ground-state configurations that break the Aufbau order
   const EXCEPTIONS = { 29: { '3d': 10, '4s': 1 }, 47: { '4d': 10, '5s': 1 }, 79: { '5d': 10, '6s': 1 }, 92: { '5f': 3, '6d': 1 } };
@@ -247,7 +272,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
 
   // ---------- Scene ----------
   const stage = document.getElementById('stage');
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(0x050816, 0);
   stage.appendChild(renderer.domElement);
@@ -282,13 +307,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
 
   // Faint particle-chamber dust
   {
-    const n = 1400, pos = new Float32Array(n * 3);
+    const n = 1600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    const hues = [0x9fb4ff, 0xffffff, 0xff9ad5, 0x8fefff, 0xffe9a0, 0xc4a5ff];
+    const c = new THREE.Color();
     for (let i = 0; i < n; i++) {
       const v = randomUnit(), r = 160 + Math.random() * 200;
       pos.set([v.x * r, v.y * r, v.z * r], i * 3);
+      c.setHex(hues[i % hues.length]); col.set([c.r, c.g, c.b], i * 3);
     }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x8fa0d8, size: 1.4, sizeAttenuation: false, transparent: true, opacity: 0.55 })));
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.7 })));
   }
 
   function randomUnit() {
@@ -331,6 +361,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   const CORE = new THREE.SphereGeometry(0.11, 12, 8);
   const TRAIL_PTS = 30, TRAIL_ARC = 1.1;
   const ORB_COLORS = [0x7fe7ff, 0xa68bff, 0xff7aa8, 0xffc66b];
+  const SHELL_COLORS = [0x3ee0ff, 0x6bff8e, 0xffe14d, 0xff9a3d, 0xff4fa3, 0xb57dff, 0x5d8bff];
+  const SHELL_CSS = ['--sh1', '--sh2', '--sh3', '--sh4', '--sh5', '--sh6', '--sh7'];
   let atom = null;
 
   function disposeTree(obj) {
@@ -350,8 +382,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     // Nucleus as instanced spheres
     const pts = packNucleus(A);
     const order = pts.map((_, i) => i).sort(() => Math.random() - 0.5);
-    const pMesh = new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0xff7a45, emissive: 0x6a2008, roughness: 0.32, metalness: 0.08 }), el.z);
-    const nMesh = el.N ? new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0x9fb2d9, emissive: 0x0e1630, roughness: 0.42, metalness: 0.15 }), el.N) : null;
+    const pMesh = new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0xff4d6d, emissive: 0x6a0a1e, roughness: 0.3, metalness: 0.08 }), el.z);
+    const nMesh = el.N ? new THREE.InstancedMesh(SPHERE, new THREE.MeshStandardMaterial({ color: 0x4da3ff, emissive: 0x08204a, roughness: 0.38, metalness: 0.12 }), el.N) : null;
     const nucleons = order.map((idx, k) => ({
       base: pts[idx], mesh: k < el.z ? pMesh : nMesh, i: k < el.z ? k : k - el.z,
       ph: Math.random() * Math.PI * 2, fr: 6 + Math.random() * 5,
@@ -360,7 +392,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     for (const q of pts) rc = Math.max(rc, Math.hypot(q[0], q[1], q[2]) + RS);
     const nucleus = new THREE.Group();
     nucleus.add(pMesh); if (nMesh) nucleus.add(nMesh);
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xff8a50, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xff5a8a, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
     halo.scale.setScalar(rc * 4.2 + 1.5);
     nucleus.add(halo);
     group.add(nucleus);
@@ -375,6 +407,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     let r = rc + 2.0;
     shellCounts.forEach((cnt, si) => {
       radii.push(r);
+      const sc = new THREE.Color(SHELL_COLORS[si % SHELL_COLORS.length]);
       const ringCount = Math.ceil(cnt / 8);
       const pivot = new THREE.Group();
       pivot.rotation.set(si * 0.9 + 0.4, si * 2.39996, 0);
@@ -388,11 +421,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
         const circ = [];
         for (let a = 0; a <= 128; a++) { const t = a / 128 * Math.PI * 2; circ.push(new THREE.Vector3(Math.cos(t) * r, Math.sin(t) * r, 0)); }
         tilt.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circ),
-          new THREE.LineBasicMaterial({ color: 0x6f86d6, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
+          new THREE.LineBasicMaterial({ color: sc, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false })));
 
         const electrons = [];
         for (let k = 0; k < n; k++) {
-          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x8fefff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: sc, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
           sprite.scale.setScalar(1.15);
           const core = new THREE.Mesh(CORE, new THREE.MeshBasicMaterial({ color: 0xf2feff }));
           const tg = new THREE.BufferGeometry();
@@ -400,7 +433,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
           const col = new Float32Array(TRAIL_PTS * 3);
           for (let j = 0; j < TRAIL_PTS; j++) {
             const f = Math.pow(1 - j / (TRAIL_PTS - 1), 1.6);
-            col.set([0.56 * f, 0.94 * f, 1.0 * f], j * 3);
+            col.set([sc.r * f, sc.g * f, sc.b * f], j * 3);
           }
           tg.setAttribute('color', new THREE.BufferAttribute(col, 3));
           const trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -487,6 +520,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
   ELEMENTS.forEach((el, i) => {
     const b = document.createElement('button');
     b.className = 'cell'; b.id = 'el-' + el.s;
+    b.style.setProperty('--c', CATS[el.cat].c);
     b.innerHTML = `<small>${el.z}</small><strong>${el.s}</strong>`;
     b.title = el.n; b.setAttribute('aria-label', `${el.n}، العدد الذري ${el.z}`);
     b.addEventListener('click', () => select(i));
@@ -504,12 +538,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     const { el, conf } = atom;
     $('zLbl').textContent = el.z;
     $('sym').textContent = el.s; $('sym').dataset.z = el.z;
+    const cat = CATS[el.cat];
+    $('sym').style.setProperty('--c', cat.c);
+    $('cat').textContent = cat.name; $('cat').style.background = cat.c;
+    $('fact').textContent = el.f;
     $('name').textContent = el.n;
     $('A').textContent = el.z + el.N;
     $('np').textContent = el.z; $('nn').textContent = el.N; $('ne').textContent = el.z;
     const shells = [];
     conf.forEach((c) => { shells[c.n - 1] = (shells[c.n - 1] || 0) + c.k; });
-    $('shells').innerHTML = shells.map((s) => `<b>${s}</b>`).join(' · ');
+    $('shells').innerHTML = shells.map((s, i) => `<b style="color:var(${SHELL_CSS[i]})">${s}</b>`).join(' · ');
     $('conf').innerHTML = conf.map((c) => `${c.n}${L[c.l]}<sup>${c.k}</sup>`).join(' ');
     const present = [...new Set(conf.map((c) => c.l))];
     const css = ['--orb-s', '--orb-p', '--orb-d', '--orb-f'];
