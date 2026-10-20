@@ -3,18 +3,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <style>
-/* Layout: full-bleed WebGL stage on a light lab ground; title block and controls at top-left, instrument panel at top-right, periodic strip along the bottom. */
+/* Layout: full-bleed WebGL stage on a light lab ground; title block and controls top-left, element card top-right, navigation bar along the bottom that opens the full periodic table. */
 :root {
   --bg: #f4f6fb;
   --bg-hi: #ffffff;
   --fg: #14213d;
   --muted: #5b6785;
   --line: rgba(20, 33, 61, 0.13);
-  --surface: rgba(255, 255, 255, 0.88);
+  --surface: rgba(255, 255, 255, 0.9);
   --proton: #e11d48;
   --neutron: #2563eb;
   --accent: #14213d;
   --sh1: #0891b2; --sh2: #16a34a; --sh3: #d97706; --sh4: #ea580c; --sh5: #db2777; --sh6: #7c3aed; --sh7: #2563eb;
+  --st-solid: #14213d; --st-liquid: #2563eb; --st-gas: #dc2626; --st-unknown: #94a3b8;
   --serif: "Amiri", "Noto Naskh Arabic", "Times New Roman", serif;
   --body: "IBM Plex Sans Arabic", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -32,12 +33,20 @@ body {
 #stage { position: fixed; inset: 0; }
 #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #stage canvas:active { cursor: grabbing; }
+button {
+  font: inherit; font-size: 13px; color: var(--fg); background: transparent;
+  border: 0; padding: 8px 12px; cursor: pointer;
+}
+button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outline-offset: 2px; }
 
+/* ---------- Element card ---------- */
 .panel {
   position: fixed;
   top: calc(16px + env(safe-area-inset-top, 0px));
   right: calc(16px + env(safe-area-inset-right, 0px));
-  width: 300px;
+  width: 310px;
+  max-height: calc(100% - 110px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
   padding: 18px 20px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -48,37 +57,45 @@ body {
   display: grid;
   gap: 14px;
 }
-.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); display: flex; justify-content: space-between; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 .ident { display: flex; align-items: center; gap: 16px; }
 .sym {
   font-family: var(--mono); font-weight: 600; font-size: 54px; line-height: 1;
   color: var(--fg); direction: ltr;
   min-width: 2.4ch; text-align: center;
-  padding: 10px 6px 6px; background: var(--bg-hi);
+  padding: 12px 6px 6px; background: var(--bg-hi);
   border: 1px solid var(--line); border-top: 4px solid var(--c, var(--line)); border-radius: 4px;
   position: relative;
 }
 .sym::after { content: attr(data-z); position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: 400; color: var(--muted); }
-.name { font-family: var(--serif); font-size: 32px; font-weight: 700; line-height: 1.1; text-wrap: balance; }
-.mass { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.name { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.mass { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .mass span, .stats dd { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.cat { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; line-height: 1.6; }
+.chip.cls { border: 1.5px solid var(--fg); color: var(--fg); }
+.chip.cat { color: #fff; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
-.stats div { border-top: 1px solid var(--line); padding-top: 8px; }
+.stats div { border-top: 1px solid var(--line); padding-top: 8px; min-width: 0; }
 .stats dt { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 600; }
+.stats dd { margin: 2px 0 0; font-size: 21px; font-weight: 600; }
+.stats dd.txt { font-family: var(--body); font-size: 16px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
 .dot.p { background: var(--proton); }
 .dot.n { background: var(--neutron); }
 .dot.e { background: conic-gradient(var(--sh1), var(--sh2), var(--sh3), var(--sh5), var(--sh1)); }
+.origin { font-size: 12px; color: var(--muted); margin-top: -6px; }
+.origin b { color: var(--st-gas); font-weight: 600; }
 .block h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
 .mono { font-family: var(--mono); font-size: 14px; line-height: 1.6; word-break: break-word; }
 #shells { direction: ltr; text-align: right; font-size: 17px; letter-spacing: 0.04em; color: var(--muted); }
 #shells b { font-weight: 600; }
+#conf { font-size: 13px; }
 #conf sup { font-size: 0.7em; color: var(--sh1); }
 .fact { font-size: 13.5px; line-height: 1.7; border-right: 3px solid var(--sh3); padding-right: 10px; }
 .fact h3 { color: var(--sh3); font-weight: 600; }
 
+/* ---------- Title + speed ---------- */
 .topbar {
   position: fixed;
   top: calc(16px + env(safe-area-inset-top, 0px));
@@ -89,41 +106,80 @@ body {
 .brand svg { flex: none; }
 .brand h1 { margin: 0; font-family: var(--serif); font-size: 28px; font-weight: 700; line-height: 1.1; color: var(--fg); }
 .brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
-.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: flex-end; }
-button {
-  font: inherit; font-size: 13px; color: var(--fg); background: transparent;
-  border: 0; padding: 8px 12px; cursor: pointer;
-}
-button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outline-offset: 2px; }
 .ctl { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; font-size: 13px; color: var(--muted); }
 .ctl input[type="range"] { width: 110px; accent-color: var(--accent); }
 .ctl button { padding: 4px 4px; }
 
-.strip {
-  position: fixed;
-  left: 0; right: 0;
-  bottom: 0;
-  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin;
-  background: linear-gradient(to top, rgba(244, 246, 251, 0.96), rgba(244, 246, 251, 0));
+/* ---------- Bottom bar ---------- */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface); border-top: 1px solid var(--line);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
-.cell {
-  flex: none; width: 52px; height: 58px; padding: 4px 6px;
-  border: 1px solid var(--line); border-top: 3px solid var(--c, var(--line)); border-radius: 4px; background: var(--bg-hi);
-  display: grid; grid-template-rows: auto 1fr; text-align: left; direction: ltr;
-  transition: border-color .2s, transform .2s, background .2s;
-}
-.cell small { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-.cell strong { font-family: var(--mono); font-size: 20px; font-weight: 600; align-self: center; text-align: center; color: var(--c, var(--fg)); }
-.cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(20, 33, 61, 0.1); }
-.cell[aria-current="true"] { background: var(--c); border-color: var(--c); transform: translateY(-3px); box-shadow: 0 6px 16px rgba(20, 33, 61, 0.18); }
-.cell[aria-current="true"] strong, .cell[aria-current="true"] small { color: #fff; }
+.nav { border: 1px solid var(--line); border-radius: 4px; background: var(--bg-hi); }
+.cur { display: inline-flex; align-items: baseline; gap: 8px; min-width: 150px; justify-content: center; font-size: 15px; }
+.cur b { font-family: var(--mono); font-size: 18px; color: var(--c, var(--fg)); }
+.cur span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.primary { background: var(--fg); color: #fff; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.primary svg { flex: none; }
 .hint {
   position: fixed; margin: 0;
   left: calc(16px + env(safe-area-inset-left, 0px));
-  bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   font-size: 12px; color: var(--muted);
 }
+
+/* ---------- Periodic table drawer ---------- */
+.drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  max-height: 92%;
+  overflow-y: auto;
+  background: var(--bg-hi);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -16px 40px rgba(20, 33, 61, 0.14);
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 12px;
+}
+.drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.drawer-head h2 { margin: 0; font-family: var(--serif); font-size: 26px; }
+.drawer-head p { margin: 0; font-size: 12px; color: var(--muted); }
+.close { border: 1px solid var(--line); border-radius: 4px; }
+.legend { display: grid; gap: 6px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.legend-row > strong { font-size: 12px; min-width: 70px; }
+.lg { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 6px; background: var(--bg-hi); }
+.lg i { width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+.lg[aria-pressed="true"] { background: var(--c); color: #fff; border-color: var(--c); }
+.lg[aria-pressed="true"] i { background: #fff; }
+.statekey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.statekey span b { font-family: var(--mono); }
+.pt-wrap { overflow-x: auto; max-width: 1100px; width: 100%; margin: 0 auto; padding-bottom: 4px; }
+.pt {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(36px, 1fr));
+  grid-template-rows: repeat(7, auto) 12px repeat(2, auto);
+  gap: 3px; min-width: 690px;
+}
+.el {
+  position: relative; padding: 3px 2px 2px; height: 46px;
+  border-radius: 3px; border: 1px solid transparent; border-top: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) 13%, #fff);
+  display: grid; grid-template-rows: auto 1fr; text-align: center; direction: ltr;
+  transition: transform .15s, opacity .2s, box-shadow .15s;
+}
+.el small { font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: left; padding-left: 2px; line-height: 1; }
+.el strong { font-family: var(--mono); font-size: clamp(12px, 1.5vw, 17px); font-weight: 600; align-self: center; line-height: 1; }
+.el.s-solid strong { color: var(--st-solid); }
+.el.s-liquid strong { color: var(--st-liquid); }
+.el.s-gas strong { color: var(--st-gas); }
+.el.s-unknown strong { color: var(--st-unknown); }
+.el:hover { transform: scale(1.12); z-index: 2; box-shadow: 0 4px 12px rgba(20, 33, 61, 0.2); }
+.el[aria-current="true"] { background: var(--c); border-color: var(--c); }
+.el[aria-current="true"] strong, .el[aria-current="true"] small { color: #fff; }
+.el.dim { opacity: 0.18; }
+.ph { display: grid; place-items: center; font-family: var(--mono); font-size: 9px; color: var(--muted); border: 1px dashed var(--line); border-radius: 3px; }
 
 @media (max-width: 720px) {
   .panel {
@@ -131,37 +187,43 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     right: calc(12px + env(safe-area-inset-right, 0px));
     top: calc(12px + env(safe-area-inset-top, 0px));
     width: auto; padding: 12px 14px; gap: 10px;
-    grid-template-columns: auto 1fr; align-items: center;
+    max-height: 48%;
   }
-  .eyebrow, .conf-block, .fact { display: none; }
+  .eyebrow, .conf-block, .fact, .shell-block { display: none; }
   .sym { font-size: 34px; }
   .name { font-size: 22px; }
-  .ident { grid-column: 1; }
-  .stats { grid-column: 2; }
-  .stats dd { font-size: 17px; }
+  .chips { margin-top: 4px; }
+  .stats dd { font-size: 16px; }
+  .stats dd.txt { font-size: 14px; }
   .stats dt { font-size: 10px; }
-  .shell-block { grid-column: 1 / -1; display: flex; gap: 10px; align-items: baseline; }
-  .shell-block h3 { margin: 0; }
-  #shells { font-size: 14px; }
-  .topbar { top: auto; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); align-items: stretch; }
-  .brand { display: none; }
-  .controls { justify-content: center; }
-  .hint { display: none; }
+  .topbar { top: auto; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); align-items: center; }
+  .brand, .hint { display: none; }
+  .cur { min-width: 0; }
+  .cur span { display: none; }
+  .bar { gap: 6px; }
+  .bar button { padding: 8px 10px; }
+  .legend-row > strong { min-width: 0; width: 100%; }
 }
 </style>
 
 <div id="stage" aria-label="نموذج ذرّة ثلاثي الأبعاد قابل للتدوير"></div>
 
 <aside class="panel" aria-live="polite">
-  <div class="eyebrow"><span>العدد الذري <span id="zLbl"></span></span><span>نموذج بور</span></div>
+  <div class="eyebrow"><span>العدد الذري <span id="zLbl"></span></span><span id="posLbl"></span></div>
   <div class="ident">
     <div class="sym" id="sym" data-z=""></div>
     <div>
       <div class="name" id="name"></div>
       <div class="mass">العدد الكتلي <span id="A"></span></div>
-      <div class="cat" id="cat"></div>
+      <div class="chips"><span class="chip cls" id="cls"></span><span class="chip cat" id="cat"></span></div>
     </div>
   </div>
+  <dl class="stats">
+    <div><dt>الحالة</dt><dd class="txt" id="state"></dd></div>
+    <div><dt>الدورة</dt><dd id="period"></dd></div>
+    <div><dt>المجموعة</dt><dd id="group"></dd></div>
+  </dl>
+  <div class="origin" id="origin"></div>
   <dl class="stats">
     <div><dt><i class="dot p"></i>بروتونات</dt><dd id="np"></dd></div>
     <div><dt><i class="dot n"></i>نيوترونات</dt><dd id="nn"></dd></div>
@@ -180,57 +242,245 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     </div>
     <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#14213d" stroke-width="1"><ellipse cx="12" cy="12" rx="10.5" ry="4"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10.5" ry="4" transform="rotate(120 12 12)"/></g><circle cx="12" cy="12" r="1.9" fill="#14213d"/></svg>
   </header>
-  <div class="controls">
-    <div class="ctl">
-      <label for="speed">السرعة</label>
-      <input type="range" id="speed" min="0" max="3" step="0.05" value="1">
-      <button id="pause" aria-label="إيقاف الحركة">❚❚</button>
-    </div>
+  <div class="ctl">
+    <label for="speed">السرعة</label>
+    <input type="range" id="speed" min="0" max="3" step="0.05" value="1">
+    <button id="pause" aria-label="إيقاف الحركة">❚❚</button>
   </div>
 </div>
 
 <p class="hint">اسحب للتدوير · مرّر للتكبير · الأسهم ← → لتغيير العنصر</p>
-<nav class="strip" id="strip" aria-label="العناصر"></nav>
+
+<div class="bar">
+  <button class="nav" id="prev" aria-label="العنصر السابق">→ السابق</button>
+  <div class="cur" id="cur"></div>
+  <button class="nav" id="next" aria-label="العنصر التالي">التالي ←</button>
+  <button class="primary" id="openTable" aria-expanded="false" aria-controls="drawer">
+    <svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" fill="currentColor"><rect x="0" y="0" width="3" height="3"/><rect x="15" y="0" width="3" height="3"/><rect x="0" y="4" width="3" height="3"/><rect x="4" y="4" width="3" height="3"/><rect x="11" y="4" width="3" height="3"/><rect x="15" y="4" width="3" height="3"/><rect x="0" y="8" width="18" height="3" opacity=".6"/><rect x="4" y="12" width="14" height="2" opacity=".4"/></svg>
+    الجدول الدوري
+  </button>
+</div>
+
+<section class="drawer" id="drawer" hidden aria-label="الجدول الدوري">
+  <div class="drawer-head">
+    <div>
+      <h2>الجدول الدوري</h2>
+      <p>118 عنصراً · اضغط أي عنصر لعرض ذرّته</p>
+    </div>
+    <button class="close" id="closeTable">إغلاق ✕</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="pt-wrap"><div class="pt" id="pt" dir="ltr"></div></div>
+</section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 (() => {
   // ---------- Data ----------
+  const SYMBOLS = 'H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og'.split(' ');
+  const NAMES = ('هيدروجين،هيليوم،ليثيوم،بيريليوم،بورون،كربون،نيتروجين،أكسجين،فلور،نيون،صوديوم،مغنيسيوم،ألومنيوم،سيليكون،فوسفور،كبريت،كلور،أرغون،بوتاسيوم،كالسيوم،' +
+    'سكانديوم،تيتانيوم،فاناديوم،كروم،منغنيز،حديد،كوبالت،نيكل،نحاس،خارصين (زنك)،غاليوم،جرمانيوم،زرنيخ،سيلينيوم،بروم،كريبتون،روبيديوم،سترونشيوم،إتريوم،زركونيوم،' +
+    'نيوبيوم،موليبدينوم،تكنيشيوم،روثينيوم،روديوم،بالاديوم،فضة،كادميوم،إنديوم،قصدير،أنتيمون،تيلوريوم،يود،زينون،سيزيوم،باريوم،لانثانوم،سيريوم،براسيوديميوم،نيوديميوم،' +
+    'بروميثيوم،ساماريوم،يوروبيوم،غادولينيوم،تيربيوم،ديسبروسيوم،هولميوم،إربيوم،ثوليوم،إيتربيوم،لوتيشيوم،هافنيوم،تنتالوم،تنغستن،رينيوم،أوزميوم،إيريديوم،بلاتين،ذهب،زئبق،' +
+    'ثاليوم،رصاص،بزموت،بولونيوم،أستاتين،رادون،فرانسيوم،راديوم،أكتينيوم،ثوريوم،بروتكتينيوم،يورانيوم،نبتونيوم،بلوتونيوم،أمريسيوم،كوريوم،بركيليوم،كاليفورنيوم،أينشتاينيوم،فيرميوم،' +
+    'مندليفيوم،نوبليوم،لورنسيوم،رذرفورديوم،دوبنيوم،سيبورغيوم،بوريوم،هاسيوم،مايتنريوم،دارمشتاتيوم،رونتجينيوم،كوبرنيسيوم،نيهونيوم،فليروفيوم،موسكوفيوم،ليفرموريوم،تينيسين،أوغانيسون').split('،');
+  // Mass number: rounded standard atomic weight; for radioactive elements, the most stable isotope
+  const MASS = [1,4,7,9,11,12,14,16,19,20,23,24,27,28,31,32,35,40,39,40,45,48,51,52,55,56,59,59,64,65,70,73,75,79,80,84,85,88,89,91,
+    93,96,98,101,103,106,108,112,115,119,122,128,127,131,133,137,139,140,141,144,145,150,152,157,159,163,165,167,169,173,175,178,181,184,186,190,192,195,197,201,
+    204,207,209,209,210,222,223,226,227,232,231,238,237,244,243,247,247,251,252,257,258,259,266,267,268,269,270,270,278,281,282,285,286,289,290,293,294,294];
+
   const CATS = {
-    nonmetal: { name: 'لا فلز', c: '#16a34a' },
-    noble: { name: 'غاز نبيل', c: '#7c3aed' },
-    alkali: { name: 'فلز قلوي', c: '#dc2626' },
-    alkaline: { name: 'فلز قلوي ترابي', c: '#ea580c' },
-    metalloid: { name: 'شبه فلز', c: '#0d9488' },
-    post: { name: 'فلز بعد انتقالي', c: '#475569' },
-    halogen: { name: 'هالوجين', c: '#ca8a04' },
-    transition: { name: 'فلز انتقالي', c: '#db2777' },
-    actinide: { name: 'أكتينيد', c: '#65a30d' },
+    alkali: { name: 'فلز قلوي', c: '#dc2626', cls: 'metal' },
+    alkaline: { name: 'فلز قلوي ترابي', c: '#ea580c', cls: 'metal' },
+    transition: { name: 'فلز انتقالي', c: '#db2777', cls: 'metal' },
+    post: { name: 'فلز بعد انتقالي', c: '#64748b', cls: 'metal' },
+    lanthanide: { name: 'لانثانيد', c: '#0284c7', cls: 'metal' },
+    actinide: { name: 'أكتينيد', c: '#65a30d', cls: 'metal' },
+    metalloid: { name: 'شبه فلز', c: '#0d9488', cls: 'metalloid' },
+    nonmetal: { name: 'لا فلز نشط', c: '#16a34a', cls: 'nonmetal' },
+    halogen: { name: 'هالوجين', c: '#ca8a04', cls: 'nonmetal' },
+    noble: { name: 'غاز نبيل', c: '#7c3aed', cls: 'nonmetal' },
   };
-  const ELEMENTS = [
-    { z: 1, s: 'H', n: 'هيدروجين', N: 0, cat: 'nonmetal', f: 'أخف العناصر وأكثرها انتشاراً في الكون، ويكوّن نحو 75% من كتلة المادة العادية فيه.' },
-    { z: 2, s: 'He', n: 'هيليوم', N: 2, cat: 'noble', f: 'لا يتجمد تحت الضغط العادي حتى قرب الصفر المطلق، ويُستخدم لتبريد مغناطيسات أجهزة الرنين المغناطيسي.' },
-    { z: 3, s: 'Li', n: 'ليثيوم', N: 4, cat: 'alkali', f: 'أخف الفلزات على الإطلاق، وهو أساس بطاريات الجوالات والسيارات الكهربائية.' },
-    { z: 6, s: 'C', n: 'كربون', N: 6, cat: 'nonmetal', f: 'أساس الكيمياء العضوية والحياة كلها، ومنه يتكوّن الألماس والجرافيت.' },
-    { z: 7, s: 'N', n: 'نيتروجين', N: 7, cat: 'nonmetal', f: 'يكوّن نحو 78% من الهواء الذي نتنفسه.' },
-    { z: 8, s: 'O', n: 'أكسجين', N: 8, cat: 'nonmetal', f: 'أكثر العناصر وفرة في القشرة الأرضية، ويكوّن نحو 21% من الهواء.' },
-    { z: 10, s: 'Ne', n: 'نيون', N: 10, cat: 'noble', f: 'يعطي الضوء الأحمر البرتقالي المعروف في لافتات النيون.' },
-    { z: 11, s: 'Na', n: 'صوديوم', N: 12, cat: 'alkali', f: 'فلز طري يُقطع بالسكين ويتفاعل بعنف مع الماء، وهو نصف ملح الطعام.' },
-    { z: 12, s: 'Mg', n: 'مغنيسيوم', N: 12, cat: 'alkaline', f: 'يحترق بضوء أبيض ساطع، ويوجد في مركز جزيء الكلوروفيل في النباتات.' },
-    { z: 13, s: 'Al', n: 'ألومنيوم', N: 14, cat: 'post', f: 'أكثر الفلزات وفرة في القشرة الأرضية، ومنه تُصنع علب المشروبات.' },
-    { z: 14, s: 'Si', n: 'سيليكون', N: 14, cat: 'metalloid', f: 'أساس رقائق الحاسوب والألواح الشمسية، ويوجد في رمل الصحراء.' },
-    { z: 17, s: 'Cl', n: 'كلور', N: 18, cat: 'halogen', f: 'غاز أصفر مخضر يُستخدم لتعقيم مياه الشرب، وهو النصف الآخر من ملح الطعام.' },
-    { z: 18, s: 'Ar', n: 'أرغون', N: 22, cat: 'noble', f: 'ثالث أكثر غاز في الهواء بنسبة تقارب 1%، ويُملأ به بعض المصابيح.' },
-    { z: 20, s: 'Ca', n: 'كالسيوم', N: 20, cat: 'alkaline', f: 'أساس العظام والأسنان، ويوجد بكثرة في الحجر الجيري.' },
-    { z: 26, s: 'Fe', n: 'حديد', N: 30, cat: 'transition', f: 'معظم لبّ الأرض من الحديد، وهو في الهيموغلوبين الذي ينقل الأكسجين في دمك.' },
-    { z: 29, s: 'Cu', n: 'نحاس', N: 35, cat: 'transition', f: 'من أفضل موصلات الكهرباء، ولذلك تُصنع منه معظم الأسلاك.' },
-    { z: 47, s: 'Ag', n: 'فضة', N: 61, cat: 'transition', f: 'أعلى العناصر توصيلاً للكهرباء والحرارة.' },
-    { z: 79, s: 'Au', n: 'ذهب', N: 118, cat: 'transition', f: 'لا يصدأ ولا يتآكل، ويمكن سحب غرام واحد منه إلى سلك طوله أكثر من كيلومترين.' },
-    { z: 92, s: 'U', n: 'يورانيوم', N: 146, cat: 'actinide', f: 'أثقل عنصر يوجد في الطبيعة بكميات كبيرة، ويُستخدم وقوداً في محطات الطاقة النووية.' },
-  ];
+  const CLASSES = { metal: 'فلز', metalloid: 'شبه فلز', nonmetal: 'لا فلز' };
+  const CLASS_PLURAL = { metal: 'فلزات', metalloid: 'أشباه فلزات', nonmetal: 'لا فلزات' };
+  const STATES = { solid: 'صلب', liquid: 'سائل', gas: 'غاز', unknown: 'غير معروف' };
+
+  function categoryOf(z) {
+    if ([1, 6, 7, 8, 15, 16, 34].includes(z)) return 'nonmetal';
+    if ([9, 17, 35, 53, 85, 117].includes(z)) return 'halogen';
+    if ([2, 10, 18, 36, 54, 86, 118].includes(z)) return 'noble';
+    if ([3, 11, 19, 37, 55, 87].includes(z)) return 'alkali';
+    if ([4, 12, 20, 38, 56, 88].includes(z)) return 'alkaline';
+    if ([5, 14, 32, 33, 51, 52].includes(z)) return 'metalloid';
+    if (z >= 57 && z <= 71) return 'lanthanide';
+    if (z >= 89 && z <= 103) return 'actinide';
+    if ([13, 31, 49, 50, 81, 82, 83, 84, 113, 114, 115, 116].includes(z)) return 'post';
+    return 'transition';
+  }
+  // State at room temperature (25 °C); elements from fermium on have never been made in visible amounts
+  function stateOf(z) {
+    if ([1, 2, 7, 8, 9, 10, 17, 18, 36, 54, 86].includes(z)) return 'gas';
+    if (z === 35 || z === 80) return 'liquid';
+    if (z >= 100) return 'unknown';
+    return 'solid';
+  }
+  // Grid position in the standard 18-column table; f-block in rows 9-10
+  function positionOf(z) {
+    if (z >= 57 && z <= 71) return { row: 9, col: z - 54, period: 6, group: null };
+    if (z >= 89 && z <= 103) return { row: 10, col: z - 86, period: 7, group: null };
+    if (z === 1) return { row: 1, col: 1, period: 1, group: 1 };
+    if (z === 2) return { row: 1, col: 18, period: 1, group: 18 };
+    const starts = [3, 11, 19, 37, 55, 87];
+    let p = 0; while (p + 1 < starts.length && z >= starts[p + 1]) p++;
+    const period = p + 2, o = z - starts[p];
+    let col;
+    if (period <= 3) col = o < 2 ? o + 1 : o + 11;
+    else if (period <= 5) col = o + 1;
+    else col = o < 2 ? o + 1 : o - 13;
+    return { row: period, col, period, group: col };
+  }
+
+  const FACTS = {
+    H: 'أخف العناصر وأكثرها انتشاراً في الكون، ويكوّن نحو 75% من كتلة المادة العادية فيه.',
+    He: 'لا يتجمد تحت الضغط العادي حتى قرب الصفر المطلق، ويُستخدم لتبريد مغناطيسات أجهزة الرنين المغناطيسي.',
+    Li: 'أخف الفلزات على الإطلاق، وهو أساس بطاريات الجوالات والسيارات الكهربائية.',
+    Be: 'خفيف وقوي جداً، ومنه صُنعت مرايا تلسكوب جيمس ويب الفضائي.',
+    B: 'يدخل في صناعة زجاج البوروسيليكات المقاوم للحرارة المستخدم في أدوات المختبر.',
+    C: 'أساس الكيمياء العضوية والحياة كلها، ومنه يتكوّن الألماس والجرافيت.',
+    N: 'يكوّن نحو 78% من الهواء الذي نتنفسه.',
+    O: 'أكثر العناصر وفرة في القشرة الأرضية، ويكوّن نحو 21% من الهواء.',
+    F: 'أكثر العناصر نشاطاً كيميائياً، ومركّباته تُضاف إلى معجون الأسنان لحماية المينا.',
+    Ne: 'يعطي الضوء الأحمر البرتقالي المعروف في لافتات النيون.',
+    Na: 'فلز طري يُقطع بالسكين ويتفاعل بعنف مع الماء، وهو نصف ملح الطعام.',
+    Mg: 'يحترق بضوء أبيض ساطع، ويوجد في مركز جزيء الكلوروفيل في النباتات.',
+    Al: 'أكثر الفلزات وفرة في القشرة الأرضية، ومنه تُصنع علب المشروبات.',
+    Si: 'أساس رقائق الحاسوب والألواح الشمسية، ويوجد في رمل الصحراء.',
+    P: 'الفوسفور الأحمر يُستخدم في الشريط الجانبي لعلب الكبريت، وهو جزء من جزيء DNA.',
+    S: 'عنصر أصفر اللون، ومنه يُصنع حمض الكبريتيك أحد أكثر المواد الكيميائية إنتاجاً في العالم.',
+    Cl: 'غاز أصفر مخضر يُستخدم لتعقيم مياه الشرب، وهو النصف الآخر من ملح الطعام.',
+    Ar: 'ثالث أكثر غاز في الهواء بنسبة تقارب 1%، ويُملأ به بعض المصابيح.',
+    K: 'ضروري لعمل الأعصاب والعضلات، ويوجد بكثرة في الموز.',
+    Ca: 'أساس العظام والأسنان، ويوجد بكثرة في الحجر الجيري.',
+    Sc: 'يُضاف بكميات صغيرة إلى الألومنيوم لتقويته في هياكل الدراجات وبعض الطائرات.',
+    Ti: 'قوي مثل الفولاذ وأخف منه بنحو 45%، ويُستخدم في الطائرات والمفاصل الصناعية.',
+    V: 'يُضاف إلى الفولاذ لزيادة صلابته في أدوات مثل المفاتيح والمطارق.',
+    Cr: 'يعطي الفولاذ المقاوم للصدأ لمعانه، ويعطي الياقوت لونه الأحمر.',
+    Mn: 'ضروري لصناعة الفولاذ، ويوجد ثاني أكسيده في البطاريات القلوية.',
+    Fe: 'معظم لبّ الأرض من الحديد، وهو في الهيموغلوبين الذي ينقل الأكسجين في دمك.',
+    Co: 'يعطي الزجاج والخزف اللون الأزرق الكوبالتي، ويوجد في فيتامين B12.',
+    Ni: 'يُستخدم في العملات المعدنية وفي الفولاذ المقاوم للصدأ.',
+    Cu: 'من أفضل موصلات الكهرباء، ولذلك تُصنع منه معظم الأسلاك.',
+    Zn: 'يُطلى به الحديد لحمايته من الصدأ (الجلفنة)، وهو مهم لجهاز المناعة.',
+    Ga: 'ينصهر عند 29.8 درجة مئوية، أي يذوب في راحة اليد.',
+    Ge: 'من أوائل المواد التي صُنعت منها الترانزستورات.',
+    As: 'سام جداً، واستُخدمت مركّباته قديماً في المبيدات.',
+    Se: 'ضروري لجسم الإنسان بكميات ضئيلة، واستُخدم في آلات النسخ الضوئي.',
+    Br: 'أحد عنصرين فقط سائلين في درجة حرارة الغرفة، ولونه أحمر بني.',
+    Kr: 'كان المتر يُعرَّف بين 1960 و1983 بطول موجة ضوء ينبعث من الكريبتون.',
+    Rb: 'يشتعل تلقائياً في الهواء، ويُستخدم في الساعات الذرية.',
+    Sr: 'يعطي الألعاب النارية لونها الأحمر.',
+    Y: 'يدخل في صناعة مصابيح LED البيضاء وبعض أنواع الليزر.',
+    Zr: 'مقاوم للتآكل، وتُغلَّف به قضبان الوقود في المفاعلات النووية.',
+    Nb: 'يدخل في المغناطيسات فائقة التوصيل في أجهزة الرنين المغناطيسي.',
+    Mo: 'يتحمل حرارة عالية جداً، ويُضاف إلى الفولاذ لتقويته.',
+    Tc: 'أول عنصر حُضّر صناعياً سنة 1937، ويُستخدم في التصوير الطبي.',
+    Ru: 'يُضاف إلى البلاتين والبالاديوم لزيادة صلابتهما.',
+    Rh: 'من أغلى المعادن، ويُستخدم في المحولات الحفازة في السيارات.',
+    Pd: 'يمتص من الهيدروجين ما يصل إلى 900 ضعف حجمه.',
+    Ag: 'أعلى العناصر توصيلاً للكهرباء والحرارة.',
+    Cd: 'يُستخدم في بطاريات النيكل-كادميوم، لكنه سام.',
+    In: 'أكسيد الإنديوم والقصدير طبقة شفافة موصلة في شاشات اللمس.',
+    Sn: 'يُطلى به الحديد في علب الأغذية، ويكوّن البرونز عند خلطه بالنحاس.',
+    Sb: 'استُخدم مركّبه في الكحل منذ آلاف السنين.',
+    Te: 'يدخل في نوع من الألواح الشمسية مصنوع من تيلوريد الكادميوم.',
+    I: 'ضروري للغدة الدرقية، ولذلك يُضاف إلى ملح الطعام.',
+    Xe: 'يُستخدم في المصابيح الأمامية القوية للسيارات وفي محركات الدفع الأيوني للمركبات الفضائية.',
+    Cs: 'الساعات الذرية المعتمدة على السيزيوم هي التي تُعرِّف الثانية.',
+    Ba: 'يشرب المريض كبريتات الباريوم قبل تصوير الجهاز الهضمي بالأشعة السينية.',
+    La: 'يدخل في عدسات الكاميرات عالية الجودة وفي بطاريات بعض السيارات الهجينة.',
+    Ce: 'أكثر العناصر الأرضية النادرة وفرة، ويُستخدم في حجر القداحات.',
+    Pr: 'يعطي زجاج نظارات اللحّامين لوناً يحمي العين من الوهج.',
+    Nd: 'مغناطيسات النيوديميوم أقوى المغناطيسات الدائمة، وتوجد في السماعات والمحركات.',
+    Pm: 'عنصر مشع لا يوجد في الطبيعة إلا بكميات ضئيلة جداً.',
+    Sm: 'مغناطيسات السماريوم-كوبالت تحافظ على قوتها في درجات الحرارة العالية.',
+    Eu: 'يعطي اللون الأحمر في الشاشات، ويُستخدم في علامات الأمان على أوراق اليورو النقدية.',
+    Gd: 'يُحقن مركّبه للمرضى لتوضيح صور الرنين المغناطيسي.',
+    Tb: 'يعطي اللون الأخضر في بعض الشاشات والمصابيح الموفّرة.',
+    Dy: 'يُضاف إلى مغناطيسات النيوديميوم في السيارات الكهربائية لتتحمل الحرارة.',
+    Ho: 'من أقوى العناصر مغناطيسياً، ويُستخدم في بعض أنواع الليزر الطبي.',
+    Er: 'يُضاف إلى ألياف الإنترنت الضوئية لتقوية الإشارة.',
+    Tm: 'من أندر اللانثانيدات، ويُستخدم في أجهزة أشعة سينية محمولة.',
+    Yb: 'يُستخدم في بعض أدق الساعات الذرية الضوئية.',
+    Lu: 'آخر اللانثانيدات وأكثرها كثافة وصلابة.',
+    Hf: 'يمتص النيوترونات بقوة، فيُستخدم في قضبان التحكم بالمفاعلات النووية.',
+    Ta: 'يُستخدم في المكثفات الصغيرة داخل الجوالات.',
+    W: 'أعلى الفلزات درجة انصهار (نحو 3422 °C)، ومنه كانت فتائل المصابيح القديمة.',
+    Re: 'من أندر العناصر في القشرة الأرضية، ويُستخدم في محركات الطائرات النفاثة.',
+    Os: 'أكثر العناصر كثافة، نحو 22.6 غرام في السنتيمتر المكعب.',
+    Ir: 'من أكثر الفلزات مقاومة للتآكل، وطبقة غنية به في الصخور ترتبط بانقراض الديناصورات.',
+    Pt: 'أندر من الذهب، ويُستخدم في المحولات الحفازة والمجوهرات.',
+    Au: 'لا يصدأ ولا يتآكل، ويمكن سحب غرام واحد منه إلى سلك طوله أكثر من كيلومترين.',
+    Hg: 'الفلز الوحيد السائل في درجة حرارة الغرفة.',
+    Tl: 'شديد السمية، ولذلك سُمّي "سم المسمّمين".',
+    Pb: 'كثيف ولين، ويُستخدم للحماية من الأشعة السينية وفي بطاريات السيارات.',
+    Bi: 'يتبلور في أشكال ملوّنة تشبه الدرج، ويدخل في بعض أدوية المعدة.',
+    Po: 'اكتشفته ماري كوري وسمّته باسم وطنها بولندا.',
+    At: 'أندر عنصر طبيعي في القشرة الأرضية، ولا يتجاوز ما فيها منه غراماً واحداً تقريباً.',
+    Rn: 'غاز مشع يتسرب من الصخور وقد يتجمع في الأقبية.',
+    Fr: 'من أندر العناصر الطبيعية، وعمر النصف لأكثر نظائره استقراراً 22 دقيقة فقط.',
+    Ra: 'اكتشفه الزوجان كوري، وكان يُطلى به قديماً عقارب الساعات المضيئة.',
+    Ac: 'يتوهج بلون أزرق باهت في الظلام بسبب إشعاعه الشديد.',
+    Th: 'يُدرس وقوداً نووياً بديلاً لليورانيوم، وسُمّي باسم ثور في الأساطير الإسكندنافية.',
+    Pa: 'من أندر العناصر الطبيعية وأغلاها.',
+    U: 'أثقل عنصر يوجد في الطبيعة بكميات كبيرة، ويُستخدم وقوداً في محطات الطاقة النووية.',
+    Np: 'أول عنصر بعد اليورانيوم، وسُمّي على كوكب نبتون.',
+    Pu: 'سُمّي على بلوتو، ويولّد الكهرباء لمركبات فضائية مثل فوياجر.',
+    Am: 'توجد منه كمية ضئيلة في كثير من أجهزة كشف الدخان المنزلية.',
+    Cm: 'سُمّي تكريماً لماري وبيير كوري.',
+    Bk: 'سُمّي على مدينة بيركلي الأمريكية حيث حُضّر أول مرة.',
+    Cf: 'سُمّي على ولاية كاليفورنيا، ويُستخدم مصدراً للنيوترونات.',
+    Es: 'سُمّي تكريماً لأينشتاين، واكتُشف في حطام أول قنبلة هيدروجينية سنة 1952.',
+    Fm: 'سُمّي تكريماً للفيزيائي إنريكو فيرمي، واكتُشف مع الأينشتاينيوم.',
+    Md: 'سُمّي تكريماً لمندليف صاحب الجدول الدوري.',
+    No: 'سُمّي تكريماً لألفريد نوبل مؤسس جائزة نوبل.',
+    Lr: 'سُمّي تكريماً لإرنست لورنس مخترع المسرّع الدوراني (السيكلوترون).',
+    Rf: 'سُمّي تكريماً لرذرفورد مكتشف نواة الذرّة.',
+    Db: 'سُمّي على مدينة دوبنا الروسية التي فيها أحد أكبر مختبرات العناصر الثقيلة.',
+    Sg: 'سُمّي تكريماً لغلين سيبورغ، وكان حياً عند تسميته.',
+    Bh: 'سُمّي تكريماً لنيلز بور صاحب النموذج الذري الذي تراه أمامك.',
+    Hs: 'سُمّي على ولاية هِسن الألمانية.',
+    Mt: 'سُمّي تكريماً لليزا مايتنر التي شاركت في اكتشاف الانشطار النووي.',
+    Ds: 'سُمّي على مدينة دارمشتات الألمانية حيث اكتُشف.',
+    Rg: 'سُمّي تكريماً لرونتغن مكتشف الأشعة السينية.',
+    Cn: 'سُمّي تكريماً لكوبرنيكوس الذي قال إن الأرض تدور حول الشمس.',
+    Nh: 'أول عنصر يُكتشف في آسيا، وسُمّي على اليابان (نيهون).',
+    Fl: 'سُمّي على مختبر فليروف للتفاعلات النووية في روسيا.',
+    Mc: 'سُمّي على منطقة موسكو.',
+    Lv: 'سُمّي على مختبر لورنس ليفرمور الوطني الأمريكي.',
+    Ts: 'سُمّي على ولاية تينيسي الأمريكية.',
+    Og: 'آخر عنصر في الجدول الدوري حتى الآن، وسُمّي تكريماً للعالم يوري أوغانيسيان.',
+  };
+
+  const ELEMENTS = SYMBOLS.map((s, i) => {
+    const z = i + 1, cat = categoryOf(z);
+    return {
+      z, s, n: NAMES[i], N: MASS[i] - z, cat, cls: CATS[cat].cls, state: stateOf(z), ...positionOf(z),
+      radioactive: z === 43 || z === 61 || z >= 84,
+      synthetic: z === 43 || z === 61 || z >= 93,
+      f: FACTS[s],
+    };
+  });
+
   // Real ground-state configurations that break the Aufbau order
-  const EXCEPTIONS = { 29: { '3d': 10, '4s': 1 }, 47: { '4d': 10, '5s': 1 }, 79: { '5d': 10, '6s': 1 }, 92: { '5f': 3, '6d': 1 } };
+  const EXCEPTIONS = {
+    24: { '3d': 5, '4s': 1 }, 29: { '3d': 10, '4s': 1 },
+    41: { '4d': 4, '5s': 1 }, 42: { '4d': 5, '5s': 1 }, 44: { '4d': 7, '5s': 1 }, 45: { '4d': 8, '5s': 1 }, 46: { '4d': 10, '5s': 0 }, 47: { '4d': 10, '5s': 1 },
+    57: { '4f': 0, '5d': 1 }, 58: { '4f': 1, '5d': 1 }, 64: { '4f': 7, '5d': 1 },
+    78: { '5d': 9, '6s': 1 }, 79: { '5d': 10, '6s': 1 },
+    89: { '5f': 0, '6d': 1 }, 90: { '5f': 0, '6d': 2 }, 91: { '5f': 2, '6d': 1 }, 92: { '5f': 3, '6d': 1 }, 93: { '5f': 4, '6d': 1 }, 96: { '5f': 7, '6d': 1 },
+    103: { '6d': 0, '7p': 1 },
+  };
   const ORDER = ['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s','5f','6d','7p'];
   const CAP = { s: 2, p: 6, d: 10, f: 14 };
   const L = 'spdf';
@@ -265,7 +515,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
   controls.dampingFactor = 0.07;
   controls.enablePan = false;
   controls.minDistance = 3;
-  controls.maxDistance = 140;
+  controls.maxDistance = 160;
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.5;
 
@@ -419,45 +669,110 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
   }
 
   // ---------- UI ----------
-  let paused = false, speed = 1, current = 14;
+  let paused = false, speed = 1, current = 25; // iron
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced) { speed = 0.3; controls.autoRotate = false; }
   const $ = (id) => document.getElementById(id);
   $('speed').value = speed;
 
-  const strip = $('strip');
-  ELEMENTS.forEach((el, i) => {
+  // Periodic table
+  const pt = $('pt');
+  const cells = ELEMENTS.map((el, i) => {
     const b = document.createElement('button');
-    b.className = 'cell'; b.id = 'el-' + el.s;
+    b.className = `el s-${el.state}`;
+    b.dataset.cat = el.cat;
     b.style.setProperty('--c', CATS[el.cat].c);
+    b.style.gridRow = el.row; b.style.gridColumn = el.col;
     b.innerHTML = `<small>${el.z}</small><strong>${el.s}</strong>`;
-    b.title = el.n; b.setAttribute('aria-label', `${el.n}، العدد الذري ${el.z}`);
-    b.addEventListener('click', () => select(i));
-    strip.appendChild(b);
+    b.title = `${el.n} · ${CATS[el.cat].name} · ${STATES[el.state]}`;
+    b.setAttribute('aria-label', `${el.n}، العدد الذري ${el.z}`);
+    b.addEventListener('click', () => { select(i); closeTable(); });
+    pt.appendChild(b);
+    return b;
   });
+  [['57–71', 6], ['89–103', 7]].forEach(([label, row]) => {
+    const d = document.createElement('div');
+    d.className = 'ph'; d.textContent = label;
+    d.style.gridRow = row; d.style.gridColumn = 3;
+    pt.appendChild(d);
+  });
+
+  // Legend: grouped by metal / metalloid / nonmetal; tap a category to highlight it
+  let highlight = null;
+  const legend = $('legend');
+  ['metal', 'metalloid', 'nonmetal'].forEach((cls) => {
+    const row = document.createElement('div');
+    row.className = 'legend-row';
+    row.innerHTML = `<strong>${CLASS_PLURAL[cls]}</strong>`;
+    Object.entries(CATS).filter(([, c]) => c.cls === cls).forEach(([key, c]) => {
+      const b = document.createElement('button');
+      b.className = 'lg'; b.style.setProperty('--c', c.c);
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = `<i></i>${c.name}`;
+      b.addEventListener('click', () => {
+        highlight = highlight === key ? null : key;
+        legend.querySelectorAll('.lg').forEach((x) => x.setAttribute('aria-pressed', x === b && highlight ? 'true' : 'false'));
+        cells.forEach((cell) => cell.classList.toggle('dim', !!highlight && cell.dataset.cat !== highlight));
+      });
+      row.appendChild(b);
+    });
+    legend.appendChild(row);
+  });
+  const key2 = document.createElement('div');
+  key2.className = 'statekey';
+  key2.innerHTML = 'لون الرمز يبيّن الحالة عند درجة حرارة الغرفة: ' +
+    '<span><b style="color:var(--st-solid)">Fe</b> صلب</span>' +
+    '<span><b style="color:var(--st-liquid)">Hg</b> سائل</span>' +
+    '<span><b style="color:var(--st-gas)">O</b> غاز</span>' +
+    '<span><b style="color:var(--st-unknown)">Og</b> غير معروف</span>';
+  legend.appendChild(key2);
+
+  const drawer = $('drawer');
+  function openTable() {
+    drawer.hidden = false; $('openTable').setAttribute('aria-expanded', 'true');
+    cells[current].focus({ preventScroll: true });
+    cells[current].scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+  function closeTable() { drawer.hidden = true; $('openTable').setAttribute('aria-expanded', 'false'); }
+  $('openTable').addEventListener('click', openTable);
+  $('closeTable').addEventListener('click', closeTable);
+  $('prev').addEventListener('click', () => select(current - 1));
+  $('next').addEventListener('click', () => select(current + 1));
 
   function select(i) {
     current = (i + ELEMENTS.length) % ELEMENTS.length;
-    [...strip.children].forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
-    strip.children[current].scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    cells.forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
     build(ELEMENTS[current]);
   }
 
   function updatePanel() {
     const { el, conf } = atom;
-    $('zLbl').textContent = el.z;
-    $('sym').textContent = el.s; $('sym').dataset.z = el.z;
     const cat = CATS[el.cat];
+    $('zLbl').textContent = el.z;
+    $('posLbl').textContent = el.group ? `الدورة ${el.period} · المجموعة ${el.group}` : `الدورة ${el.period} · ${cat.name}ات`;
+    $('sym').textContent = el.s; $('sym').dataset.z = el.z;
     $('sym').style.setProperty('--c', cat.c);
-    $('cat').textContent = cat.name; $('cat').style.background = cat.c;
-    $('fact').textContent = el.f;
     $('name').textContent = el.n;
     $('A').textContent = el.z + el.N;
+    $('cls').textContent = CLASSES[el.cls];
+    $('cat').textContent = cat.name; $('cat').style.background = cat.c;
+    $('state').textContent = STATES[el.state];
+    $('state').style.color = `var(--st-${el.state})`;
+    $('period').textContent = el.period;
+    $('group').textContent = el.group || '—';
+    $('origin').innerHTML = (el.synthetic ? 'عنصر صناعي' : 'يوجد في الطبيعة') + (el.radioactive ? ' · <b>مشع</b>' : ' · مستقر');
+    $('fact').textContent = el.f || `${el.n} ${cat.name}، ${STATES[el.state] === 'غير معروف' ? 'وحالته الفيزيائية غير معروفة' : 'حالته ' + STATES[el.state]} في درجة حرارة الغرفة.`;
     $('np').textContent = el.z; $('nn').textContent = el.N; $('ne').textContent = el.z;
     const shells = [];
     conf.forEach((c) => { shells[c.n - 1] = (shells[c.n - 1] || 0) + c.k; });
     $('shells').innerHTML = shells.map((s, i) => `<b style="color:var(${SHELL_CSS[i]})">${s}</b>`).join(' · ');
     $('conf').innerHTML = conf.map((c) => `${c.n}${L[c.l]}<sup>${c.k}</sup>`).join(' ');
+    const cur = $('cur');
+    cur.style.setProperty('--c', cat.c);
+    cur.innerHTML = `<b></b><strong></strong><span></span>`;
+    cur.querySelector('b').textContent = el.s;
+    cur.querySelector('strong').textContent = el.n;
+    cur.querySelector('span').textContent = `${el.z} / 118`;
   }
 
   $('speed').addEventListener('input', (e) => { speed = +e.target.value; });
@@ -468,7 +783,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sh1); outli
     controls.autoRotate = !paused && !reduced;
   });
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'Escape' && !drawer.hidden) { closeTable(); return; }
+    if (e.target.tagName === 'INPUT' || !drawer.hidden) return;
     if (e.key === 'ArrowLeft') select(current + 1);
     if (e.key === 'ArrowRight') select(current - 1);
   });
