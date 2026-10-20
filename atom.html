@@ -620,6 +620,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--electron); 
     requestAnimationFrame(frame);
   }
 
+  // Open the element named in the link's #anchor (e.g. #Fe, #U)
+  function fromHash() {
+    const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    const i = ELEMENTS.findIndex((el) => el.s.toLowerCase() === h);
+    return i >= 0 ? i : -1;
+  }
+  window.addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0) select(i); });
+  const initial = fromHash();
+  if (initial >= 0) current = initial;
+
   select(current);
   requestAnimationFrame(frame);
 })();
